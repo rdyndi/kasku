@@ -141,6 +141,25 @@ export function IconPengaturan() {
   );
 }
 
+export function IconQuickJual() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b76f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 7h14l1 12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2L5 7z" />
+      <path d="M9 11a3 3 0 0 0 6 0" />
+    </svg>
+  );
+}
+
+export function IconQuickBiaya() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b76f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 3v18l2.5-1.5L10 21l2-1.5L14 21l2.5-1.5L19 21V3l-2.5 1.5L14 3l-2 1.5L10 3 7.5 4.5 5 3z" />
+      <path d="M12 8v8" />
+      <path d="M14.2 9.8c0-1-1-1.6-2.2-1.6s-2.2.6-2.2 1.6c0 1 .9 1.4 2.2 1.7 1.3.3 2.2.7 2.2 1.7 0 1-1 1.6-2.2 1.6s-2.2-.6-2.2-1.6" />
+    </svg>
+  );
+}
+
 export function IconSubOverview() {
   return (
     <svg width="19" height="20" viewBox="0 0 24 24" fill="none">
