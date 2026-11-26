@@ -151,7 +151,7 @@ export default async function HomePage() {
     for (const l of journalLines) {
       const d = new Date(l.journalEntry.transDate);
       if (d.getFullYear() !== m.year || d.getMonth() !== m.month) continue;
-      if (l.account.isCashBank) {
+      if (l.account.isCashBank && l.account.category === "asset") {
         cashIn += Number(l.debit);
         cashOut += Number(l.credit);
       }

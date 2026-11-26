@@ -45,7 +45,14 @@ export default async function CashBankPage() {
           .reduce((s, l) => s + Number(l.debit) - Number(l.credit), 0);
         return { label: m.label, value: val };
       });
-      return { id: acc.id, code: acc.code, name: acc.name, balance, series };
+      return {
+        id: acc.id,
+        code: acc.code,
+        name: acc.name,
+        category: acc.category,
+        balance,
+        series,
+      };
     });
 
   const allAccounts = accounts.map((a) => ({ id: a.id, code: a.code, name: a.name }));

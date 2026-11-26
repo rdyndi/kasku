@@ -21,6 +21,7 @@ type CashAccount = {
   id: string;
   code: string;
   name: string;
+  category?: string;
   balance: number;
   series: Array<{ label: string; value: number }>;
 };
@@ -88,6 +89,7 @@ export function CashBankClient({
   // Add Kas/Bank Account form
   const [accCode, setAccCode] = useState("");
   const [accName, setAccName] = useState("");
+  const [accKind, setAccKind] = useState<"cash_bank" | "credit_card">("cash_bank");
 
   async function refresh() {
     const res = await fetch("/api/cash-transfers");
@@ -124,14 +126,15 @@ export function CashBankClient({
   async function handleCreateAccount(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    const isCreditCard = accKind === "credit_card";
     const res = await fetch("/api/accounts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         code: accCode,
         name: accName,
-        category: "asset",
-        subCategory: "kas_bank",
+        category: isCreditCard ? "liability" : "asset",
+        subCategory: isCreditCard ? "kewajiban_lancar" : "kas_bank",
         isCashBank: true,
       }),
     });
@@ -142,6 +145,7 @@ export function CashBankClient({
     }
     setAccCode("");
     setAccName("");
+    setAccKind("cash_bank");
     setShowAddAccountModal(false);
     router.refresh();
   }
@@ -226,12 +230,19 @@ export function CashBankClient({
           <div key={acc.id} className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <Link
-                  href={`/kas-bank/${acc.id}`}
-                  className="text-base font-bold text-blue-600 hover:underline"
-                >
-                  {acc.name}
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/kas-bank/${acc.id}`}
+                    className="text-base font-bold text-blue-600 hover:underline"
+                  >
+                    {acc.name}
+                  </Link>
+                  {acc.category === "liability" && (
+                    <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                      Kartu Kredit (Utang)
+                    </span>
+                  )}
+                </div>
                 <div className="text-xs font-mono text-slate-400">{acc.code}</div>
               </div>
               <div className="flex items-center gap-2">
@@ -448,22 +459,60 @@ export function CashBankClient({
             {error && <div className="p-3 rounded-lg bg-red-50 text-red-700 text-xs">{error}</div>}
             <form onSubmit={handleCreateAccount} className="space-y-3">
               <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Jenis Akun</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAccKind("cash_bank")}
+                    className={`px-3 py-2 rounded-lg border text-xs font-medium text-left transition ${
+                      accKind === "cash_bank"
+                        ? "border-blue-600 bg-blue-50 text-blue-700"
+                        : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    Kas / Bank (Aset)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAccKind("credit_card")}
+                    className={`px-3 py-2 rounded-lg border text-xs font-medium text-left transition ${
+                      accKind === "credit_card"
+                        ? "border-amber-600 bg-amber-50 text-amber-800"
+                        : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    Kartu Kredit (Utang)
+                  </button>
+                </div>
+                {accKind === "credit_card" && (
+                  <p className="mt-1.5 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
+                    Dipakai untuk belanja/biaya (tampil minus di Kas &amp; Bank, tercatat sebagai Kewajiban di Neraca). Lunasi lewat Transfer Kas dari Bank.
+                  </p>
+                )}
+              </div>
+              <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">Kode Akun</label>
                 <input
                   required
                   value={accCode}
                   onChange={(e) => setAccCode(e.target.value)}
-                  placeholder="Contoh: 1-10003"
+                  placeholder={accKind === "credit_card" ? "Contoh: 2-10002" : "Contoh: 1-10003"}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Nama Kas / Bank</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">
+                  {accKind === "credit_card" ? "Nama Kartu Kredit" : "Nama Kas / Bank"}
+                </label>
                 <input
                   required
                   value={accName}
                   onChange={(e) => setAccName(e.target.value)}
-                  placeholder="Contoh: Bank Mandiri / Kartu Kredit"
+                  placeholder={
+                    accKind === "credit_card"
+                      ? "Contoh: Kartu Kredit BCA"
+                      : "Contoh: Bank Mandiri / Kas Kecil"
+                  }
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                 />
               </div>

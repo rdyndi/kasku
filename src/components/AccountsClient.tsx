@@ -207,8 +207,14 @@ export function AccountsClient({ initialAccounts }: { initialAccounts: AccountRo
                   <td className="px-4 py-3 font-medium text-slate-900">
                     {acc.name}
                     {acc.isCashBank && (
-                      <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        Kas/Bank
+                      <span
+                        className={`ml-2 text-[10px] px-1.5 py-0.5 rounded border ${
+                          acc.category === "liability"
+                            ? "bg-amber-50 text-amber-700 border-amber-200"
+                            : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        }`}
+                      >
+                        {acc.category === "liability" ? "Kartu Kredit / Pembayaran" : "Kas/Bank"}
                       </span>
                     )}
                   </td>
@@ -284,7 +290,11 @@ export function AccountsClient({ initialAccounts }: { initialAccounts: AccountRo
                   checked={isCashBank}
                   onChange={(e) => setIsCashBank(e.target.checked)}
                 />
-                <span>Termasuk Akun Kas & Bank</span>
+                <span>
+                  {category === "liability"
+                    ? "Jadikan Sumber Pembayaran / Kartu Kredit (tampil di Kas & Bank)"
+                    : "Termasuk Akun Kas & Bank"}
+                </span>
               </label>
               <div className="flex justify-end gap-2 pt-2">
                 <button

@@ -132,7 +132,7 @@ export async function GET(req: Request) {
   if (type === "arus-kas" || type === "proyeksi-arus-kas") {
     const cashLines = await prisma.journalLine.findMany({
       where: {
-        account: { companyId, isCashBank: true },
+        account: { companyId, isCashBank: true, category: "asset" },
         journalEntry: { companyId, status: "POSTED", ...(dateFilter ? { transDate: dateFilter } : {}) },
       },
       include: { journalEntry: true, account: true },
@@ -196,7 +196,7 @@ export async function GET(req: Request) {
 
   if (type === "ringkasan-eksekutif" || type === "ringkasan-bank") {
     const { rows } = await getTrialBalance(companyId, startDate, endDate);
-    const cashAccounts = rows.filter((r) => r.isCashBank);
+    const cashAccounts = rows.filter((r) => r.isCashBank && r.category === "asset");
     const totalCash = cashAccounts.reduce((s, r) => s + r.endingBalance, 0);
     const totalAR = rows.filter((r) => r.code === "1-10100").reduce((s, r) => s + r.endingBalance, 0);
     const totalAP = rows.filter((r) => r.code === "2-20100").reduce((s, r) => s + r.endingBalance, 0);
