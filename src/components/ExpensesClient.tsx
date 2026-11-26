@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { useState } from "react";
+import { CircleDollarSign, Plus, X } from "lucide-react";
+import { BulkPaymentModal } from "@/components/BulkPaymentModal";
 
 type Option = { id: string; name: string };
 type ExpenseRow = {
@@ -44,6 +46,13 @@ export function ExpensesClient({
   initialDate?: string;
 }) {
   const router = useRouter();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkPayOpen, setBulkPayOpen] = useState(false);
+
+  function toggleAll() {
+    if (selectedIds.length === expenses.length) setSelectedIds([]);
+    else setSelectedIds(expenses.map((e) => e.id));
+  }
 
   const openTotal = expenses
     .filter((e) => e.status !== "PAID")
@@ -83,10 +92,41 @@ export function ExpensesClient({
         </div>
       </div>
 
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setBulkPayOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-medium text-slate-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition"
+          >
+            <CircleDollarSign className="w-3.5 h-3.5 text-slate-600" />
+            Set Lunas
+          </button>
+          <span className="text-xs font-semibold text-blue-600 ml-1">
+            Tampilkan {selectedIds.length} baris dipilih
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelectedIds([])}
+            className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+            title="Batalkan pilihan"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200 text-left text-xs font-semibold text-slate-500 uppercase">
             <tr>
+              <th className="px-3 py-3 w-10">
+                <input
+                  type="checkbox"
+                  checked={expenses.length > 0 && selectedIds.length === expenses.length}
+                  onChange={toggleAll}
+                />
+              </th>
               <th className="px-4 py-3">No.</th>
               <th className="px-4 py-3">Kontak</th>
               <th className="px-4 py-3">Tanggal</th>
@@ -104,6 +144,17 @@ export function ExpensesClient({
                   onClick={() => router.push(`/biaya/${exp.id}`)}
                   className="hover:bg-blue-50/40 cursor-pointer"
                 >
+                  <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(exp.id)}
+                      onChange={() =>
+                        setSelectedIds((prev) =>
+                          prev.includes(exp.id) ? prev.filter((x) => x !== exp.id) : [...prev, exp.id]
+                        )
+                      }
+                    />
+                  </td>
                   <td className="px-4 py-3 font-mono text-xs font-medium">
                     <Link href={`/biaya/${exp.id}`} className="text-blue-600 hover:underline">
                       {exp.expenseNo}
@@ -125,7 +176,7 @@ export function ExpensesClient({
             })}
             {expenses.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
                   Belum ada pencatatan biaya.
                 </td>
               </tr>
@@ -133,6 +184,26 @@ export function ExpensesClient({
           </tbody>
         </table>
       </div>
+
+      <BulkPaymentModal
+        open={bulkPayOpen}
+        onClose={() => setBulkPayOpen(false)}
+        onSuccess={() => {
+          setBulkPayOpen(false);
+          setSelectedIds([]);
+          router.refresh();
+        }}
+        type="EXPENSE"
+        selectedItems={expenses
+          .filter((exp) => selectedIds.includes(exp.id))
+          .map((exp) => ({
+            id: exp.id,
+            docNo: exp.expenseNo,
+            contactName: exp.contact?.name || "Tanpa Kontak",
+            status: exp.status,
+            balanceDue: Math.max(0, exp.grandTotal - exp.paidAmount),
+          }))}
+      />
     </div>
   );
 }

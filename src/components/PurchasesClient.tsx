@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { BarChart3, Eye, Plus, Printer, Search } from "lucide-react";
+import { BarChart3, CircleDollarSign, Eye, Plus, Printer, Search, X } from "lucide-react";
+import { BulkPaymentModal } from "@/components/BulkPaymentModal";
 
 type Option = { id: string; name: string };
 type Invoice = {
@@ -54,6 +55,7 @@ export function PurchasesClient({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkPayOpen, setBulkPayOpen] = useState(false);
   const [showAllTotal, setShowAllTotal] = useState(false);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(15);
@@ -183,6 +185,41 @@ export function PurchasesClient({
           ))}
         </div>
       </div>
+
+      {/* Bulk Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 py-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setBulkPayOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-medium text-slate-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition"
+            >
+              <CircleDollarSign className="w-3.5 h-3.5 text-slate-600" />
+              Set Lunas
+            </button>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+            >
+              <Printer className="w-3.5 h-3.5 text-slate-600" />
+              Print
+            </button>
+            <span className="text-xs font-semibold text-blue-600 ml-1">
+              Tampilkan {selectedIds.length} baris dipilih
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedIds([])}
+              className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+              title="Batalkan pilihan"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="overflow-x-auto">
@@ -331,6 +368,25 @@ export function PurchasesClient({
           <option value={50}>50 / halaman</option>
         </select>
       </div>
+      <BulkPaymentModal
+        open={bulkPayOpen}
+        onClose={() => setBulkPayOpen(false)}
+        onSuccess={() => {
+          setBulkPayOpen(false);
+          setSelectedIds([]);
+          router.refresh();
+        }}
+        type="PURCHASE_INVOICE"
+        selectedItems={invoices
+          .filter((inv) => selectedIds.includes(inv.id))
+          .map((inv) => ({
+            id: inv.id,
+            docNo: inv.billNo,
+            contactName: inv.contact?.name || "-",
+            status: inv.status,
+            balanceDue: inv.balanceDue,
+          }))}
+      />
     </div>
   );
 }
