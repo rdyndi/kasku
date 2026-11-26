@@ -9,6 +9,13 @@ interface Category {
   name: string;
 }
 
+interface AccountOpt {
+  id: string;
+  code: string;
+  name: string;
+  category: string;
+}
+
 interface ProductItem {
   id: string;
   sku: string;
@@ -21,6 +28,8 @@ interface ProductItem {
   isPurchased: boolean;
   isSold: boolean;
   trackInventory: boolean;
+  purchaseAccountId?: string | null;
+  salesAccountId?: string | null;
   categoryId: string | null;
   category: Category | null;
 }
@@ -39,9 +48,11 @@ const DEFAULT_UNITS = ["Pcs", "Kg", "LITER", "Pack", "Galon", "Box", "Lusin", "G
 export function ProductsClient({
   initialProducts,
   initialCategories,
+  accounts = [],
 }: {
   initialProducts: ProductItem[];
   initialCategories: Category[];
+  accounts?: AccountOpt[];
 }) {
   const [products, setProducts] = useState<ProductItem[]>(initialProducts);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
@@ -68,6 +79,8 @@ export function ProductsClient({
   const [sellPrice, setSellPrice] = useState("0");
   const [isPurchased, setIsPurchased] = useState(true);
   const [isSold, setIsSold] = useState(true);
+  const [purchaseAccountId, setPurchaseAccountId] = useState("");
+  const [salesAccountId, setSalesAccountId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [trackInventory, setTrackInventory] = useState(true);
   const [newCatName, setNewCatName] = useState("");
@@ -96,6 +109,8 @@ export function ProductsClient({
     setSellPrice("0");
     setIsPurchased(true);
     setIsSold(true);
+    setPurchaseAccountId("");
+    setSalesAccountId("");
     setCategoryId("");
     setTrackInventory(true);
     setError("");
@@ -113,6 +128,8 @@ export function ProductsClient({
     setSellPrice(String(p.sellPrice));
     setIsPurchased(p.isPurchased);
     setIsSold(p.isSold);
+    setPurchaseAccountId(p.purchaseAccountId || "");
+    setSalesAccountId(p.salesAccountId || "");
     setCategoryId(p.categoryId || "");
     setTrackInventory(p.trackInventory);
     setError("");
@@ -136,6 +153,8 @@ export function ProductsClient({
       sellPrice: isSold ? Number(sellPrice) || 0 : 0,
       isPurchased,
       isSold,
+      purchaseAccountId: isPurchased ? purchaseAccountId || null : null,
+      salesAccountId: isSold ? salesAccountId || null : null,
       categoryId: categoryId || null,
       trackInventory: type === "service" ? false : trackInventory,
     };
@@ -479,13 +498,32 @@ export function ProductsClient({
                     <span>Saya membeli item ini</span>
                   </button>
                   {isPurchased && (
-                    <div>
-                      <label className="block text-xs font-medium text-slate-700 mb-1">Harga</label>
-                      <CurrencyInput
-                        value={buyPrice}
-                        onValueChange={setBuyPrice}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-right"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Harga Beli</label>
+                        <CurrencyInput
+                          value={buyPrice}
+                          onValueChange={setBuyPrice}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-right"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Akun Pembelian</label>
+                        <select
+                          value={purchaseAccountId}
+                          onChange={(e) => setPurchaseAccountId(e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                        >
+                          <option value="">Default (Persediaan Barang)</option>
+                          {accounts
+                            .filter((a) => ["cogs", "expense", "asset"].includes(a.category))
+                            .map((a) => (
+                              <option key={a.id} value={a.id}>
+                                {a.code} {a.name}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -507,13 +545,32 @@ export function ProductsClient({
                     <span>Saya menjual item ini</span>
                   </button>
                   {isSold && (
-                    <div>
-                      <label className="block text-xs font-medium text-slate-700 mb-1">Harga</label>
-                      <CurrencyInput
-                        value={sellPrice}
-                        onValueChange={setSellPrice}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-right"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Harga Jual</label>
+                        <CurrencyInput
+                          value={sellPrice}
+                          onValueChange={setSellPrice}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-right"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Akun Penjualan</label>
+                        <select
+                          value={salesAccountId}
+                          onChange={(e) => setSalesAccountId(e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                        >
+                          <option value="">Default (Pendapatan Penjualan)</option>
+                          {accounts
+                            .filter((a) => a.category === "revenue")
+                            .map((a) => (
+                              <option key={a.id} value={a.id}>
+                                {a.code} {a.name}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
                     </div>
                   )}
                 </div>

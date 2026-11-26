@@ -29,6 +29,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       sellPrice: sold ? (body.sellPrice !== undefined ? Number(body.sellPrice) : existing.sellPrice) : 0,
       isPurchased: purchased,
       isSold: sold,
+      purchaseAccountId: purchased
+        ? body.purchaseAccountId !== undefined
+          ? body.purchaseAccountId || null
+          : existing.purchaseAccountId
+        : null,
+      salesAccountId: sold
+        ? body.salesAccountId !== undefined
+          ? body.salesAccountId || null
+          : existing.salesAccountId
+        : null,
       categoryId: body.categoryId !== undefined ? body.categoryId || null : existing.categoryId,
       trackInventory: body.trackInventory !== undefined ? Boolean(body.trackInventory) : existing.trackInventory,
     },

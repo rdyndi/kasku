@@ -21,7 +21,21 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { sku, name, type, unit, buyPrice, sellPrice, categoryId, trackInventory, barcode, isPurchased, isSold } = body;
+    const {
+      sku,
+      name,
+      type,
+      unit,
+      buyPrice,
+      sellPrice,
+      categoryId,
+      trackInventory,
+      barcode,
+      isPurchased,
+      isSold,
+      purchaseAccountId,
+      salesAccountId,
+    } = body;
     if (!sku || !name) return NextResponse.json({ error: "SKU dan nama produk wajib diisi." }, { status: 400 });
     const purchased = isPurchased !== false;
     const sold = isSold !== false;
@@ -41,6 +55,8 @@ export async function POST(req: Request) {
         sellPrice: sold ? Number(sellPrice) || 0 : 0,
         isPurchased: purchased,
         isSold: sold,
+        purchaseAccountId: purchased ? purchaseAccountId || null : null,
+        salesAccountId: sold ? salesAccountId || null : null,
         categoryId: categoryId || null,
         trackInventory: trackInventory !== false,
       },

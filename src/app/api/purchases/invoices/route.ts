@@ -96,8 +96,9 @@ export async function POST(req: Request) {
       qty: number;
       unitCost: number;
       taxRate: number;
+      lineSubtotal: number;
       lineTotal: number;
-      product?: { trackInventory: boolean; name: string };
+      product?: { trackInventory: boolean; name: string; purchaseAccountId: string | null };
     }> = [];
 
     for (const item of items as ItemInput[]) {
@@ -110,11 +111,11 @@ export async function POST(req: Request) {
       subtotal += lineSubtotal;
       taxTotal += lineTax;
 
-      let product: { trackInventory: boolean; name: string } | undefined;
+      let product: { trackInventory: boolean; name: string; purchaseAccountId: string | null } | undefined;
       if (item.productId) {
         const p = await prisma.product.findFirst({
           where: { id: item.productId, companyId: session.companyId },
-          select: { trackInventory: true, name: true },
+          select: { trackInventory: true, name: true, purchaseAccountId: true },
         });
         if (p) product = p;
       }
@@ -125,6 +126,7 @@ export async function POST(req: Request) {
         qty,
         unitCost,
         taxRate,
+        lineSubtotal,
         lineTotal,
         product,
       });
@@ -144,15 +146,29 @@ export async function POST(req: Request) {
     // Debit: Persediaan / Expense for each item group, Debit: PPN Masukan (if taxTotal > 0), Credit: Utang Usaha
     const journalLines: Array<{ accountId: string; debit: number; credit: number; description?: string; contactId?: string }> = [];
 
-    // Group goods subtotal → inventory account
-    // We debit inventory for the full subtotal (all goods+services go to inventory account per spec)
+    // Group pembelian per akun (gunakan purchaseAccountId produk jika ada, fallback ke default_inventory)
     if (netCost > 0) {
-      journalLines.push({
-        accountId: inventoryMapping.accountId,
-        debit: netCost,
-        credit: 0,
-        description: `Pembelian - ${billNo}`,
-        contactId,
+      const accountTotals = new Map<string, number>();
+      for (const it of processedItems) {
+        const accId = it.product?.purchaseAccountId || inventoryMapping.accountId;
+        accountTotals.set(accId, (accountTotals.get(accId) || 0) + it.lineSubtotal);
+      }
+      const entries = Array.from(accountTotals.entries());
+      const scale = subtotal > 0 ? netCost / subtotal : 1;
+      let allocated = 0;
+      entries.forEach(([accId, amt], i) => {
+        const debitAmt =
+          i === entries.length - 1 ? netCost - allocated : Math.round(amt * scale);
+        allocated += debitAmt;
+        if (debitAmt > 0) {
+          journalLines.push({
+            accountId: accId,
+            debit: debitAmt,
+            credit: 0,
+            description: `Pembelian - ${billNo}`,
+            contactId,
+          });
+        }
       });
     }
 

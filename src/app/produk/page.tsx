@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 export default async function ProductsPage() {
   const { session, company } = await requirePageSession();
 
-  const [products, categories] = await Promise.all([
+  const [products, categories, accounts] = await Promise.all([
     prisma.product.findMany({
       where: { companyId: company.id },
       include: { category: true },
@@ -16,6 +16,11 @@ export default async function ProductsPage() {
     prisma.productCategory.findMany({
       where: { companyId: company.id },
       orderBy: { name: "asc" },
+    }),
+    prisma.account.findMany({
+      where: { companyId: company.id },
+      select: { id: true, code: true, name: true, category: true },
+      orderBy: { code: "asc" },
     }),
   ]);
 
@@ -34,10 +39,13 @@ export default async function ProductsPage() {
           isPurchased: p.isPurchased,
           isSold: p.isSold,
           trackInventory: p.trackInventory,
+          purchaseAccountId: p.purchaseAccountId,
+          salesAccountId: p.salesAccountId,
           categoryId: p.categoryId,
           category: p.category,
         }))}
         initialCategories={categories}
+        accounts={accounts}
       />
     </AppShell>
   );

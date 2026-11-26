@@ -122,6 +122,22 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const taxInAccountId = await getMapped("default_tax_in");
 
   if (existing.journalEntryId && apAccountId && invAccountId) {
+    const productIds = computedItems.map((it) => it.productId).filter(Boolean) as string[];
+    const prodList = productIds.length
+      ? await prisma.product.findMany({
+          where: { id: { in: productIds }, companyId: session.companyId },
+          select: { id: true, purchaseAccountId: true },
+        })
+      : [];
+    const prodAccMap = new Map(prodList.map((p) => [p.id, p.purchaseAccountId]));
+
+    const accountTotals = new Map<string, number>();
+    for (const it of computedItems) {
+      const accId = (it.productId && prodAccMap.get(it.productId)) || invAccountId;
+      const lineNet = Number(it.qty) * Number(it.unitCost);
+      accountTotals.set(accId, (accountTotals.get(accId) || 0) + lineNet);
+    }
+
     const newLines: Array<{
       accountId: string;
       contactId: string | null;
@@ -129,7 +145,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       credit: number;
       description: string;
     }> = [
-      { accountId: invAccountId, contactId: null, debit: subtotal, credit: 0, description: `Pembelian ${existing.billNo}` },
+      ...Array.from(accountTotals.entries())
+        .filter(([, amt]) => amt > 0)
+        .map(([accId, amt]) => ({
+          accountId: accId,
+          contactId: null,
+          debit: amt,
+          credit: 0,
+          description: `Pembelian ${existing.billNo}`,
+        })),
       { accountId: apAccountId, contactId, debit: 0, credit: grandTotal, description: `Utang ${existing.billNo}` },
     ];
     if (taxTotal > 0 && taxInAccountId) {

@@ -281,10 +281,12 @@ model Product {
   unit           String   @default("pcs")
   buyPrice       Decimal  @default(0)
   sellPrice      Decimal  @default(0)
-  isPurchased    Boolean  @default(true)
-  isSold         Boolean  @default(true)
-  trackInventory Boolean  @default(true)
-  isDemoData     Boolean  @default(false)
+  isPurchased       Boolean  @default(true)
+  isSold            Boolean  @default(true)
+  trackInventory    Boolean  @default(true)
+  purchaseAccountId String?
+  salesAccountId    String?
+  isDemoData        Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
