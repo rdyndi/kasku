@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Pencil, Printer, Trash2 } from "lucide-react";
 import { CurrencyInput } from "@/components/CurrencyInput";
 
@@ -55,9 +55,13 @@ export function ExpenseDetailClient({
   const balanceDue = Math.max(0, expense.grandTotal - expense.paidAmount);
   const [cashAccountId, setCashAccountId] = useState(cashAccounts[0]?.id || "");
   const [paymentDate, setPaymentDate] = useState(initialDate);
-  const [amount, setAmount] = useState(String(balanceDue));
+  const [amount, setAmount] = useState(String(Math.round(balanceDue)));
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setAmount(String(Math.round(balanceDue)));
+  }, [balanceDue]);
 
   async function handlePay(e: React.FormEvent) {
     e.preventDefault();

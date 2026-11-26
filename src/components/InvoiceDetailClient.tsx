@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Pencil, Printer, Trash2 } from "lucide-react";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { PrintableDocument } from "@/components/PrintableDocument";
@@ -63,11 +63,15 @@ export function InvoiceDetailClient({
   const router = useRouter();
   const [cashAccountId, setCashAccountId] = useState(cashAccounts[0]?.id || "");
   const [paymentDate, setPaymentDate] = useState(initialDate);
-  const [amount, setAmount] = useState(String(invoice.balanceDue));
+  const [amount, setAmount] = useState(String(Math.round(invoice.balanceDue)));
   const [reference, setReference] = useState("");
   const [method, setMethod] = useState("Transfer Bank");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setAmount(String(Math.round(invoice.balanceDue)));
+  }, [invoice.balanceDue]);
 
   async function handlePay(e: React.FormEvent) {
     e.preventDefault();
