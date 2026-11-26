@@ -8,9 +8,11 @@ import {
   ArrowRightLeft,
   ArrowUpRight,
   BarChart3,
+  ChevronRight,
   Plus,
   Printer,
   Search,
+  Trash2,
   UserMinus,
   Wallet,
 } from "lucide-react";
@@ -168,7 +170,147 @@ export function CashBankClient({
   );
 
   return (
-    <div className="space-y-5">
+    <div>
+      {/* Mobile View */}
+      <div className="block lg:hidden space-y-4 pb-20">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Cari akun kas / bank..."
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+          />
+        </div>
+
+        {/* Quick Action Buttons */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              setError("");
+              setShowTransferModal(true);
+            }}
+            className="py-2.5 px-3 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.98] transition"
+          >
+            <ArrowRightLeft className="w-4 h-4 text-blue-600" />
+            <span>Transfer / Terima</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setError("");
+              setShowAddAccountModal(true);
+            }}
+            className="py-2.5 px-3 rounded-2xl bg-blue-600 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.98] transition"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Akun Kas &amp; Bank</span>
+          </button>
+        </div>
+
+        {/* Mobile Cash & Bank Account Cards */}
+        <div className="space-y-2.5">
+          {filteredAccounts.map((acc) => {
+            const initial = (acc.name || "K").trim().slice(0, 1).toUpperCase();
+            return (
+              <Link
+                key={acc.id}
+                href={`/kas-bank/${acc.id}`}
+                className="block bg-white rounded-2xl border border-slate-100 p-4 shadow-xs active:scale-[0.99] transition"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-base flex-shrink-0">
+                      {initial}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-slate-900 truncate">{acc.name}</span>
+                        {acc.category === "liability" && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-amber-50 text-amber-700">
+                            Kartu Kredit
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs font-mono text-slate-400">{acc.code}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="text-right">
+                      <div className="text-[10px] text-slate-400">Saldo KASKU</div>
+                      <div
+                        className={`text-sm font-bold ${
+                          acc.balance < 0 ? "text-rose-600" : "text-slate-900"
+                        }`}
+                      >
+                        {fmt(acc.balance)}
+                      </div>
+                    </div>
+                    <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+          {filteredAccounts.length === 0 && (
+            <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center text-sm text-slate-400">
+              Akun kas/bank tidak ditemukan.
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Transfer History */}
+        <div className="pt-2 space-y-2.5">
+          <h2 className="text-sm font-bold text-slate-900 px-1">Riwayat Transaksi Kas &amp; Transfer</h2>
+          {transfers.map((t) => {
+            const Icon = TYPE_ICONS[t.type] || ArrowRightLeft;
+            return (
+              <div
+                key={t.id}
+                className="bg-white rounded-2xl border border-slate-100 p-3.5 shadow-xs flex items-center justify-between gap-3"
+              >
+                <div className="min-w-0 space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-bold text-blue-600">{t.docNo}</span>
+                    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold ${TYPE_COLORS[t.type] || ""}`}>
+                      <Icon className="w-3 h-3" />
+                      {TYPE_LABELS[t.type] || t.type}
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-700 truncate">{t.memo || "—"}</div>
+                  <div className="text-[11px] text-slate-400">
+                    {new Date(t.transDate).toLocaleDateString("id-ID")}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-sm font-bold text-slate-900">{money(t.amount)}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteTransfer(t.id)}
+                    className="p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50"
+                    aria-label="Hapus transaksi"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          {transfers.length === 0 && (
+            <div className="bg-white rounded-2xl border border-slate-100 p-6 text-center text-xs text-slate-400">
+              Belum ada transaksi kas/bank.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop View */}
+      <div className="hidden lg:block space-y-5">
       {/* Header Toolbar (Gaya Kledo) */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-slate-900">Kas &amp; Bank</h1>
@@ -332,6 +474,7 @@ export function CashBankClient({
             )}
           </tbody>
         </table>
+      </div>
       </div>
 
       {/* Modal Transaksi Kas/Bank */}

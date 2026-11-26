@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Printer, Search, Star } from "lucide-react";
+import { ArrowLeft, ChevronRight, Printer, Search, Star } from "lucide-react";
 import { ProfitLossView, type PLData } from "@/components/ProfitLossView";
 
 interface TrialRow {
@@ -204,29 +204,29 @@ export function ReportsClient({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="w-full lg:w-auto flex flex-wrap items-center gap-2">
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white"
+              className="flex-1 sm:flex-none px-2.5 py-2 border border-slate-300 rounded-xl lg:rounded-lg text-xs bg-white"
             />
             <span className="text-xs text-slate-400">s/d</span>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white"
+              className="flex-1 sm:flex-none px-2.5 py-2 border border-slate-300 rounded-xl lg:rounded-lg text-xs bg-white"
             />
             <button
               onClick={() => openReport(activeReport, startDate, endDate)}
-              className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700"
+              className="px-3.5 py-2 rounded-xl lg:rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700"
             >
               Terapkan
             </button>
             <button
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-50"
             >
               <Printer className="w-3.5 h-3.5" />
               Cetak
@@ -503,51 +503,56 @@ export function ReportsClient({
   const q = search.trim().toLowerCase();
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-900">Laporan</h1>
-        <div className="relative w-72">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+    <div className="space-y-4 lg:space-y-6 pb-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="hidden lg:block text-2xl font-bold text-slate-900">Laporan</h1>
+        <div className="relative w-full lg:w-72">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari laporan..."
-            className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2.5 lg:py-2 border border-slate-200 lg:border-slate-300 rounded-2xl lg:rounded-lg text-sm bg-white shadow-xs lg:shadow-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 items-start">
         {REPORT_GROUPS.map((group) => {
           const items = group.items.filter((it) => !q || it.label.toLowerCase().includes(q));
           if (items.length === 0) return null;
           return (
-            <div key={group.title} className="space-y-2.5">
-              <h2 className="text-sm font-bold text-slate-900">{group.title}</h2>
-              <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-xs">
+            <div key={group.title} className="space-y-2">
+              <h2 className="text-xs lg:text-sm font-bold uppercase lg:normal-case tracking-wider lg:tracking-normal text-slate-500 lg:text-slate-900 px-1 lg:px-0">
+                {group.title}
+              </h2>
+              <div className="bg-white rounded-2xl lg:rounded-xl border border-slate-100 lg:border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-xs">
                 {items.map((rep) => {
                   const isFav = favorites.includes(rep.id);
                   return (
                     <div
                       key={rep.id}
                       onClick={() => openReport(rep)}
-                      className="px-5 py-3.5 flex items-center gap-3.5 cursor-pointer transition hover:bg-blue-50/40 group"
+                      className="px-4 lg:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer transition hover:bg-blue-50/40 active:bg-slate-50 group"
                     >
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFav(rep.id);
-                        }}
-                        className="text-blue-500 hover:scale-110 transition shrink-0"
-                        aria-label={`Favorit ${rep.label}`}
-                      >
-                        <Star className={`w-4 h-4 ${isFav ? "fill-blue-600 text-blue-600" : "text-blue-400"}`} />
-                      </button>
-                      <span className="text-sm font-medium text-blue-600 group-hover:underline">
-                        {rep.label}
-                      </span>
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFav(rep.id);
+                          }}
+                          className="text-blue-500 hover:scale-110 transition shrink-0"
+                          aria-label={`Favorit ${rep.label}`}
+                        >
+                          <Star className={`w-4 h-4 ${isFav ? "fill-blue-600 text-blue-600" : "text-blue-400"}`} />
+                        </button>
+                        <span className="text-sm font-semibold lg:font-medium text-slate-800 lg:text-blue-600 group-hover:underline truncate">
+                          {rep.label}
+                        </span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-300 lg:hidden flex-shrink-0" />
                     </div>
                   );
                 })}
