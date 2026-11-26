@@ -3,13 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "next dev -p 3000 -H 0.0.0.0",
+    "build": "prisma generate --config prisma7.config.ts && next build",
+    "start": "next start -p 3000 -H 0.0.0.0",
+    "lint": "eslint",
+    "cf:build": "node scripts/cf-build.mjs",
+    "cf:preview": "npm run cf:build && opennextjs-cloudflare preview",
+    "cf:deploy": "npm run cf:build && opennextjs-cloudflare deploy",
+    "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "d1:init:local": "wrangler d1 execute kasku-db --local --file=./prisma/init.sql",
+    "d1:init:remote": "wrangler d1 execute kasku-db --remote --file=./prisma/init.sql"
   },
   "dependencies": {
+    "@opennextjs/cloudflare": "^1.20.19",
     "@prisma/adapter-better-sqlite3": "^7.10.1",
+    "@prisma/adapter-d1": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^13.2.0",
@@ -18,7 +26,8 @@
     "lucide-react": "^1.80.0",
     "next": "16.4.6",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "wrangler": "^4.168.0"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "4.3.3",

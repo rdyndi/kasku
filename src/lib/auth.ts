@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 
 const SECRET = new TextEncoder().encode(
@@ -42,9 +42,14 @@ export async function getSession(): Promise<SessionPayload | null> {
 export async function setSessionCookie(payload: SessionPayload) {
   const token = await createSessionToken(payload);
   const cookieStore = await cookies();
+  const hdrs = await headers();
+  const proto = hdrs.get("x-forwarded-proto") || "";
+  const isHttps = proto.includes("https");
+
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: isHttps ? "none" : "lax",
+    secure: isHttps,
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });

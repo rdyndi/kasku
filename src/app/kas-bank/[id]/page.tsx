@@ -26,8 +26,19 @@ export default async function CashAccountDetailPage({ params }: { params: Promis
   let running = 0;
   let totalInMonth = 0;
   let totalOutMonth = 0;
+  const movements: Array<{
+    id: string;
+    transDate: string;
+    entryNo: string;
+    memo: string;
+    description: string | null;
+    debit: number;
+    credit: number;
+    runningBalance: number;
+    status: string;
+  }> = [];
 
-  const movements = lines.map((l) => {
+  for (const l of lines) {
     const d = Number(l.debit);
     const c = Number(l.credit);
     if (l.journalEntry.status === "POSTED") {
@@ -38,7 +49,7 @@ export default async function CashAccountDetailPage({ params }: { params: Promis
         totalOutMonth += c;
       }
     }
-    return {
+    movements.push({
       id: l.id,
       transDate: l.journalEntry.transDate.toISOString(),
       entryNo: l.journalEntry.entryNo,
@@ -48,8 +59,8 @@ export default async function CashAccountDetailPage({ params }: { params: Promis
       credit: c,
       runningBalance: running,
       status: l.journalEntry.status,
-    };
-  });
+    });
+  }
 
   // Display newest first like Kledo, keeping accurate running balances
   const newestFirst = [...movements].reverse();

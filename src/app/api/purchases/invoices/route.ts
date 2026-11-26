@@ -183,94 +183,88 @@ export async function POST(req: Request) {
       lines: journalLines,
     });
 
-    // Create invoice + items + stock updates in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-
-      // Create the invoice
-      const invoice = await tx.purchaseInvoice.create({
-        data: {
-          companyId: session.companyId,
-          billNo,
-          contactId,
-          transDate: new Date(transDate),
-          dueDate: new Date(dueDate),
-          status: "OPEN",
-          subtotal,
-          taxTotal,
-          grandTotal,
-          paidAmount: downPayment,
-          balanceDue: finalBalanceDue,
-          journalEntryId: journal.id,
-          items: {
-            create: processedItems.map((item) => ({
-              productId: item.productId || null,
-              description: item.description,
-              qty: item.qty,
-              unitCost: item.unitCost,
-              taxRate: item.taxRate,
-              lineTotal: item.lineTotal,
-            })),
-          },
+    // Create invoice + items + stock updates sequentially (D1 does not support interactive $transaction)
+    const invoice = await prisma.purchaseInvoice.create({
+      data: {
+        companyId: session.companyId,
+        billNo,
+        contactId,
+        transDate: new Date(transDate),
+        dueDate: new Date(dueDate),
+        status: "OPEN",
+        subtotal,
+        taxTotal,
+        grandTotal,
+        paidAmount: downPayment,
+        balanceDue: finalBalanceDue,
+        journalEntryId: journal.id,
+        items: {
+          create: processedItems.map((item) => ({
+            productId: item.productId || null,
+            description: item.description,
+            qty: item.qty,
+            unitCost: item.unitCost,
+            taxRate: item.taxRate,
+            lineTotal: item.lineTotal,
+          })),
         },
-        include: {
-          contact: { select: { id: true, name: true } },
-          items: {
-            include: { product: { select: { id: true, name: true, sku: true } } },
-          },
+      },
+      include: {
+        contact: { select: { id: true, name: true } },
+        items: {
+          include: { product: { select: { id: true, name: true, sku: true } } },
         },
-      });
-
-      // Handle inventory tracking for each item
-      if (warehouse) {
-        for (const item of processedItems) {
-          if (item.productId && item.product?.trackInventory) {
-            // Weighted average cost calculation
-            const existingStock = await tx.warehouseStock.findUnique({
-              where: { warehouseId_productId: { warehouseId: warehouse.id, productId: item.productId } },
-            });
-
-            const prevQty = existingStock ? Number(existingStock.qtyOnHand) : 0;
-            const prevAvgCost = existingStock ? Number(existingStock.avgCost) : 0;
-            const newQty = prevQty + item.qty;
-            const newAvgCost =
-              newQty > 0
-                ? (prevQty * prevAvgCost + item.qty * item.unitCost) / newQty
-                : item.unitCost;
-
-            await tx.warehouseStock.upsert({
-              where: { warehouseId_productId: { warehouseId: warehouse.id, productId: item.productId } },
-              update: {
-                qtyOnHand: newQty,
-                avgCost: newAvgCost,
-              },
-              create: {
-                warehouseId: warehouse.id,
-                productId: item.productId,
-                qtyOnHand: item.qty,
-                avgCost: item.unitCost,
-              },
-            });
-
-            await tx.stockMovement.create({
-              data: {
-                warehouseId: warehouse.id,
-                productId: item.productId,
-                sourceType: "PURCHASE",
-                sourceId: invoice.id,
-                qtyIn: item.qty,
-                qtyOut: 0,
-                unitCost: item.unitCost,
-                movementDate: new Date(transDate),
-              },
-            });
-          }
-        }
-      }
-
-      return invoice;
+      },
     });
 
-    return NextResponse.json({ invoice: result }, { status: 201 });
+    // Handle inventory tracking for each item
+    if (warehouse) {
+      for (const item of processedItems) {
+        if (item.productId && item.product?.trackInventory) {
+          // Weighted average cost calculation
+          const existingStock = await prisma.warehouseStock.findUnique({
+            where: { warehouseId_productId: { warehouseId: warehouse.id, productId: item.productId } },
+          });
+
+          const prevQty = existingStock ? Number(existingStock.qtyOnHand) : 0;
+          const prevAvgCost = existingStock ? Number(existingStock.avgCost) : 0;
+          const newQty = prevQty + item.qty;
+          const newAvgCost =
+            newQty > 0
+              ? (prevQty * prevAvgCost + item.qty * item.unitCost) / newQty
+              : item.unitCost;
+
+          await prisma.warehouseStock.upsert({
+            where: { warehouseId_productId: { warehouseId: warehouse.id, productId: item.productId } },
+            update: {
+              qtyOnHand: newQty,
+              avgCost: newAvgCost,
+            },
+            create: {
+              warehouseId: warehouse.id,
+              productId: item.productId,
+              qtyOnHand: item.qty,
+              avgCost: item.unitCost,
+            },
+          });
+
+          await prisma.stockMovement.create({
+            data: {
+              warehouseId: warehouse.id,
+              productId: item.productId,
+              sourceType: "PURCHASE",
+              sourceId: invoice.id,
+              qtyIn: item.qty,
+              qtyOut: 0,
+              unitCost: item.unitCost,
+              movementDate: new Date(transDate),
+            },
+          });
+        }
+      }
+    }
+
+    return NextResponse.json({ invoice }, { status: 201 });
   } catch (err: unknown) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Gagal membuat Faktur Pembelian." },

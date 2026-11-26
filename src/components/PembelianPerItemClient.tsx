@@ -41,7 +41,26 @@ export function PembelianPerItemClient() {
   }, []);
 
   useEffect(() => {
-    fetchData(startDate, endDate);
+    const qs = new URLSearchParams();
+    if (startDate) qs.set("startDate", startDate);
+    if (endDate) qs.set("endDate", endDate);
+    fetch(`/api/reports/pembelian-per-item?${qs.toString()}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setRows(data.rows);
+          setLastUpdated(
+            new Date().toLocaleString("id-ID", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          );
+        }
+      })
+      .finally(() => setLoading(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
