@@ -61,6 +61,9 @@ export function AreaChartSVG({
             </g>
           );
         })}
+        {minV < 0 && maxV > 0 && (
+          <line x1={padL} y1={zeroY} x2={w - padR} y2={zeroY} stroke="#cbd5e1" strokeWidth="1" />
+        )}
         {areaPath && <path d={areaPath} fill={color} fillOpacity="0.88" />}
         {linePath && <path d={linePath} fill="none" stroke={color} strokeWidth="2" />}
         {hovered && (
@@ -191,8 +194,10 @@ export function GroupedBarChartSVG({
     ...bars.map((b) => Number(d[b.key]) || 0),
     ...(lineKey ? [Number(d[lineKey]) || 0] : []),
   ]);
+  const hasPositive = allVals.some((v) => v > 0);
+  const hasNegative = allVals.some((v) => v < 0);
   const minV = Math.min(0, ...allVals);
-  const maxV = Math.max(100000, ...allVals);
+  const maxV = hasPositive ? Math.max(0, ...allVals) : hasNegative ? 0 : 100000;
   const range = maxV - minV || 1;
   const zeroY = padT + plotH - ((0 - minV) / range) * plotH;
 
@@ -224,6 +229,9 @@ export function GroupedBarChartSVG({
             </g>
           );
         })}
+        {minV < 0 && maxV > 0 && (
+          <line x1={padL} y1={zeroY} x2={w - padR} y2={zeroY} stroke="#cbd5e1" strokeWidth="1" />
+        )}
 
         {data.map((d, i) => {
           const groupW = colW * 0.72;
