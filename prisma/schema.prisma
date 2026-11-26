@@ -1,0 +1,563 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ==========================================
+// 1. TENANT, AUTH, RBAC & SETTINGS
+// ==========================================
+
+model Company {
+  id               String   @id @default(cuid())
+  name             String
+  npwp             String?
+  phone            String?
+  email            String?
+  address          String?
+  currency         String   @default("IDR")
+  fiscalStartMonth Int      @default(1)
+  lockDate         DateTime?
+  isDemo           Boolean  @default(true)
+  planTier         String   @default("starter")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  users            CompanyUser[]
+  roles            Role[]
+  numberSequences  NumberSequence[]
+  accounts         Account[]
+  accountMappings  AccountMapping[]
+  journalEntries   JournalEntry[]
+  contacts         Contact[]
+  paymentTerms     PaymentTerm[]
+  taxes            Tax[]
+  warehouses       Warehouse[]
+  productCategories ProductCategory[]
+  products         Product[]
+  salesQuotes      SalesQuote[]
+  salesInvoices    SalesInvoice[]
+  purchaseOrders   PurchaseOrder[]
+  purchaseInvoices PurchaseInvoice[]
+  payments         Payment[]
+  expenses         Expense[]
+  cashTransfers    CashTransfer[]
+  fixedAssets      FixedAsset[]
+  auditLogs        AuditLog[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  companies CompanyUser[]
+  auditLogs AuditLog[]
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  companyId   String
+  name        String
+  permissions String   @default("{}") // JSON string
+  createdAt   DateTime @default(now())
+
+  company Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  users   CompanyUser[]
+
+  @@unique([companyId, name])
+}
+
+model CompanyUser {
+  id        String   @id @default(cuid())
+  companyId String
+  userId    String
+  roleId    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role    Role    @relation(fields: [roleId], references: [id])
+
+  @@unique([companyId, userId])
+}
+
+model NumberSequence {
+  id         String @id @default(cuid())
+  companyId  String
+  docType    String // JRN, INV, QUO, PO, BILL, EXP, PAY, TRF, AST
+  prefix     String
+  nextNumber Int    @default(1)
+  padding    Int    @default(4)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, docType])
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  companyId     String
+  userId        String?
+  action        String   // CREATE, UPDATE, DELETE, POST, VOID
+  auditableType String
+  auditableId   String
+  summary       String?
+  createdAt     DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id])
+}
+
+// ==========================================
+// 2. ACCOUNTING ENGINE (COA & JURNAL)
+// ==========================================
+
+model Account {
+  id            String   @id @default(cuid())
+  companyId     String
+  code          String
+  name          String
+  category      String   // asset, liability, equity, revenue, cogs, expense
+  subCategory   String?  // kas_bank, piutang, persediaan, aset_lancar, aset_tetap, utang_usaha, kewajiban_lancar, ekuitas, pendapatan, hpp, beban_operasional, beban_lain
+  normalBalance String   // DEBIT, CREDIT
+  parentId      String?
+  isCashBank    Boolean  @default(false)
+  isSystem      Boolean  @default(false)
+  isDemoData    Boolean  @default(false)
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  company      Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  parent       Account?         @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children     Account[]        @relation("AccountHierarchy")
+  mappings     AccountMapping[]
+  journalLines JournalLine[]
+
+  @@unique([companyId, code])
+}
+
+model AccountMapping {
+  id         String @id @default(cuid())
+  companyId  String
+  mappingKey String // default_ar, default_ap, default_sales, default_inventory, default_cogs, default_tax_out, default_tax_in, default_opening_equity, default_cash
+  accountId  String
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  account Account @relation(fields: [accountId], references: [id])
+
+  @@unique([companyId, mappingKey])
+}
+
+model JournalEntry {
+  id         String   @id @default(cuid())
+  companyId  String
+  entryNo    String
+  transDate  DateTime
+  memo       String
+  sourceType String   @default("MANUAL") // MANUAL, OPENING_BALANCE, INVOICE, BILL, PAYMENT, EXPENSE, TRANSFER, DEPRECIATION
+  sourceId   String?
+  status     String   @default("POSTED") // DRAFT, POSTED, VOID
+  isDemoData Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  company Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  lines   JournalLine[]
+
+  @@unique([companyId, entryNo])
+}
+
+model JournalLine {
+  id             String  @id @default(cuid())
+  journalEntryId String
+  accountId      String
+  contactId      String?
+  debit          Decimal @default(0)
+  credit         Decimal @default(0)
+  description    String?
+
+  journalEntry JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  account      Account      @relation(fields: [accountId], references: [id])
+  contact      Contact?     @relation(fields: [contactId], references: [id])
+}
+
+// ==========================================
+// 3. MASTER DATA (KONTAK, PRODUK, PAJAK, TERMIN, GUDANG)
+// ==========================================
+
+model Contact {
+  id            String   @id @default(cuid())
+  companyId     String
+  type          String   // customer, vendor, employee, other
+  name          String
+  companyName   String?
+  email         String?
+  phone         String?
+  npwp          String?
+  address       String?
+  defaultTermId String?
+  isDemoData    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  defaultTerm      PaymentTerm?      @relation(fields: [defaultTermId], references: [id])
+  journalLines     JournalLine[]
+  salesQuotes      SalesQuote[]
+  salesInvoices    SalesInvoice[]
+  purchaseOrders   PurchaseOrder[]
+  purchaseInvoices PurchaseInvoice[]
+  payments         Payment[]
+  expenses         Expense[]
+}
+
+model PaymentTerm {
+  id        String @id @default(cuid())
+  companyId String
+  name      String
+  days      Int    @default(0)
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contacts Contact[]
+
+  @@unique([companyId, name])
+}
+
+model Tax {
+  id        String  @id @default(cuid())
+  companyId String
+  name      String
+  rate      Decimal // e.g. 11.00 for PPN 11%
+  type      String  @default("addition") // addition (PPN), withholding (PPh)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, name])
+}
+
+model Warehouse {
+  id        String  @id @default(cuid())
+  companyId String
+  code      String
+  name      String
+  address   String?
+  isDefault Boolean @default(false)
+
+  company        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  stocks         WarehouseStock[]
+  stockMovements StockMovement[]
+
+  @@unique([companyId, code])
+}
+
+model ProductCategory {
+  id        String @id @default(cuid())
+  companyId String
+  name      String
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@unique([companyId, name])
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  companyId      String
+  categoryId     String?
+  sku            String
+  barcode        String?
+  name           String
+  type           String   @default("goods") // goods, service, bundle
+  unit           String   @default("pcs")
+  buyPrice       Decimal  @default(0)
+  sellPrice      Decimal  @default(0)
+  isPurchased    Boolean  @default(true)
+  isSold         Boolean  @default(true)
+  trackInventory Boolean  @default(true)
+  isDemoData     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  company              Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category             ProductCategory?      @relation(fields: [categoryId], references: [id])
+  stocks               WarehouseStock[]
+  stockMovements       StockMovement[]
+  salesInvoiceItems    SalesInvoiceItem[]
+  purchaseInvoiceItems PurchaseInvoiceItem[]
+
+  @@unique([companyId, sku])
+}
+
+// ==========================================
+// 4. TRANSAKSI PENJUALAN & PEMBELIAN (TAHAP 2+)
+// ==========================================
+
+model SalesQuote {
+  id         String   @id @default(cuid())
+  companyId  String
+  docNo      String
+  contactId  String
+  transDate  DateTime
+  expiryDate DateTime?
+  status     String   @default("DRAFT") // DRAFT, SENT, ACCEPTED, REJECTED
+  subtotal   Decimal  @default(0)
+  taxTotal   Decimal  @default(0)
+  grandTotal Decimal  @default(0)
+  notes      String?
+  isDemoData Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact Contact @relation(fields: [contactId], references: [id])
+
+  @@unique([companyId, docNo])
+}
+
+model SalesInvoice {
+  id             String   @id @default(cuid())
+  companyId      String
+  invoiceNo      String
+  contactId      String
+  transDate      DateTime
+  dueDate        DateTime
+  status         String   @default("OPEN") // DRAFT, OPEN, PARTIAL, PAID, VOID
+  subtotal       Decimal  @default(0)
+  discountTotal  Decimal  @default(0)
+  taxTotal       Decimal  @default(0)
+  grandTotal     Decimal  @default(0)
+  paidAmount     Decimal  @default(0)
+  balanceDue     Decimal  @default(0)
+  journalEntryId String?
+  notes          String?
+  isDemoData     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  company Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact Contact            @relation(fields: [contactId], references: [id])
+  items   SalesInvoiceItem[]
+
+  @@unique([companyId, invoiceNo])
+}
+
+model SalesInvoiceItem {
+  id             String  @id @default(cuid())
+  salesInvoiceId String
+  productId      String?
+  description    String
+  qty            Decimal @default(1)
+  unitPrice      Decimal @default(0)
+  taxRate        Decimal @default(0)
+  lineTotal      Decimal @default(0)
+
+  salesInvoice SalesInvoice @relation(fields: [salesInvoiceId], references: [id], onDelete: Cascade)
+  product      Product?     @relation(fields: [productId], references: [id])
+}
+
+model PurchaseOrder {
+  id         String   @id @default(cuid())
+  companyId  String
+  poNo       String
+  contactId  String
+  transDate  DateTime
+  status     String   @default("DRAFT")
+  grandTotal Decimal  @default(0)
+  isDemoData Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact Contact @relation(fields: [contactId], references: [id])
+
+  @@unique([companyId, poNo])
+}
+
+model PurchaseInvoice {
+  id             String   @id @default(cuid())
+  companyId      String
+  billNo         String
+  contactId      String
+  transDate      DateTime
+  dueDate        DateTime
+  status         String   @default("OPEN")
+  subtotal       Decimal  @default(0)
+  taxTotal       Decimal  @default(0)
+  grandTotal     Decimal  @default(0)
+  paidAmount     Decimal  @default(0)
+  balanceDue     Decimal  @default(0)
+  journalEntryId String?
+  isDemoData     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  company Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact Contact               @relation(fields: [contactId], references: [id])
+  items   PurchaseInvoiceItem[]
+
+  @@unique([companyId, billNo])
+}
+
+model PurchaseInvoiceItem {
+  id                String  @id @default(cuid())
+  purchaseInvoiceId String
+  productId         String?
+  description       String
+  qty               Decimal @default(1)
+  unitCost          Decimal @default(0)
+  taxRate           Decimal @default(0)
+  lineTotal         Decimal @default(0)
+
+  purchaseInvoice PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id], onDelete: Cascade)
+  product         Product?        @relation(fields: [productId], references: [id])
+}
+
+model Payment {
+  id             String   @id @default(cuid())
+  companyId      String
+  paymentNo      String
+  direction      String   // IN, OUT
+  contactId      String
+  cashAccountId  String
+  paymentDate    DateTime
+  amount         Decimal  @default(0)
+  method         String   @default("Transfer Bank")
+  journalEntryId String?
+  isDemoData     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  company     Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact     Contact             @relation(fields: [contactId], references: [id])
+  allocations PaymentAllocation[]
+
+  @@unique([companyId, paymentNo])
+}
+
+model PaymentAllocation {
+  id              String  @id @default(cuid())
+  paymentId       String
+  targetType      String  // SALES_INVOICE, PURCHASE_INVOICE, EXPENSE
+  targetId        String
+  allocatedAmount Decimal @default(0)
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// 5. BIAYA, KAS/BANK, INVENTORI & ASET TETAP (TAHAP 2-4)
+// ==========================================
+
+model Expense {
+  id             String   @id @default(cuid())
+  companyId      String
+  expenseNo      String
+  contactId      String?
+  transDate      DateTime
+  dueDate        DateTime?
+  status         String   @default("OPEN") // DRAFT, OPEN, PAID
+  grandTotal     Decimal  @default(0)
+  paidAmount     Decimal  @default(0)
+  journalEntryId String?
+  isDemoData     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  company Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact Contact?      @relation(fields: [contactId], references: [id])
+  items   ExpenseItem[]
+
+  @@unique([companyId, expenseNo])
+}
+
+model ExpenseItem {
+  id          String  @id @default(cuid())
+  expenseId   String
+  accountId   String
+  description String
+  amount      Decimal @default(0)
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+}
+
+model CashTransfer {
+  id             String   @id @default(cuid())
+  companyId      String
+  docNo          String
+  type           String   // RECEIVE, SEND, TRANSFER, PRIVE
+  fromAccountId  String?
+  toAccountId    String?
+  transDate      DateTime
+  amount         Decimal  @default(0)
+  memo           String?
+  journalEntryId String?
+  isDemoData     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, docNo])
+}
+
+model WarehouseStock {
+  id          String  @id @default(cuid())
+  warehouseId String
+  productId   String
+  qtyOnHand   Decimal @default(0)
+  avgCost     Decimal @default(0)
+
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([warehouseId, productId])
+}
+
+model StockMovement {
+  id           String   @id @default(cuid())
+  warehouseId  String
+  productId    String
+  sourceType   String   // PURCHASE, SALE, ADJUSTMENT, TRANSFER
+  sourceId     String?
+  qtyIn        Decimal  @default(0)
+  qtyOut       Decimal  @default(0)
+  unitCost     Decimal  @default(0)
+  movementDate DateTime @default(now())
+
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model FixedAsset {
+  id                  String   @id @default(cuid())
+  companyId           String
+  assetCode           String
+  name                String
+  acquisitionDate     DateTime
+  acquisitionCost     Decimal  @default(0)
+  usefulLifeMonths    Int      @default(48)
+  depreciationMethod  String   @default("STRAIGHT_LINE")
+  salvageValue        Decimal  @default(0)
+  status              String   @default("ACTIVE") // ACTIVE, DISPOSED
+  isDemoData          Boolean  @default(false)
+  createdAt           DateTime @default(now())
+
+  company       Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  depreciations AssetDepreciation[]
+
+  @@unique([companyId, assetCode])
+}
+
+model AssetDepreciation {
+  id             String   @id @default(cuid())
+  fixedAssetId   String
+  periodDate     DateTime
+  amount         Decimal  @default(0)
+  journalEntryId String?
+  isReversed     Boolean  @default(false)
+
+  fixedAsset FixedAsset @relation(fields: [fixedAssetId], references: [id], onDelete: Cascade)
+}
