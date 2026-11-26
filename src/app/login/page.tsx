@@ -37,6 +37,8 @@ export default function LoginPage() {
       }
       router.push("/");
       router.refresh();
+    } catch {
+      setError("Gagal terhubung ke server. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }

@@ -25,6 +25,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL="file:/tmp/build.db"
 
 RUN npx prisma generate --config prisma7.config.ts
+RUN npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --output prisma/init.sql
 RUN npm run build
 
 # --- Runner ---
@@ -47,11 +48,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Copy Prisma schema, config, and CLI for runtime db push on persistent volume
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/prisma7.config.ts ./prisma7.config.ts
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+# Copy generated SQL schema & init script for persistent volume
+COPY --from=builder --chown=nextjs:nodejs /app/prisma/init.sql ./prisma/init.sql
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/init-db.mjs ./scripts/init-db.mjs
 COPY --from=builder --chown=nextjs:nodejs /app/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
