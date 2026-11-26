@@ -10,10 +10,8 @@ import {
   ChevronRight,
   CircleHelp,
   Bell,
-  Landmark,
   LogOut,
   Trash2,
-  ShoppingCart,
   Sun,
   PanelLeft,
 } from "lucide-react";
@@ -35,8 +33,6 @@ import {
   IconSubPengiriman,
   IconSubPemesanan,
   IconSubPenawaran,
-  IconQuickJual,
-  IconQuickBiaya,
 } from "@/components/KledoIcons";
 
 interface AppShellProps {
@@ -403,19 +399,19 @@ export function AppShell({ companyName, userName, isDemo, children }: AppShellPr
 
           <div className="kledo-quick-actions">
             <Link href="/penjualan" className="kledo-quick-action">
-              <IconQuickJual />
+              <IconPenjualan />
               <span>Jual</span>
             </Link>
             <Link href="/pembelian" className="kledo-quick-action">
-              <ShoppingCart size={16} />
+              <IconPembelian />
               <span>Beli</span>
             </Link>
             <Link href="/biaya" className="kledo-quick-action">
-              <IconQuickBiaya />
+              <IconBiaya />
               <span>Biaya</span>
             </Link>
             <Link href="/kas-bank" className="kledo-quick-action">
-              <Landmark size={16} />
+              <IconKasBank />
               <span>Kasir</span>
             </Link>
           </div>

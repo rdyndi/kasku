@@ -413,6 +413,8 @@ body {
 
 .kledo-quick-action svg {
   color: #3b82f6;
+  width: 18px;
+  height: 19px;
   flex-shrink: 0;
 }
 
