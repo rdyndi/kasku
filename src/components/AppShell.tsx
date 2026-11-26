@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Menu,
   Search,
@@ -17,6 +17,7 @@ import {
   ShoppingBag,
   Receipt,
   Sun,
+  PanelLeft,
 } from "lucide-react";
 import {
   IconBeranda,
@@ -92,6 +93,29 @@ export function AppShell({ companyName, userName, isDemo, children }: AppShellPr
   const [salesOpen, setSalesOpen] = useState(pathname.startsWith("/penjualan"));
   const [purchaseOpen, setPurchaseOpen] = useState(pathname.startsWith("/pembelian"));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("kasku_sidebar_collapsed") === "true") {
+        setCollapsed(true);
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("kasku_sidebar_collapsed", String(next));
+      } catch {
+        // ignore storage errors
+      }
+      return next;
+    });
+  }
   const [menuQuery, setMenuQuery] = useState("");
   const [companyDropdownOpen, setCompanyDropdownOpen] = useState(false);
   const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
@@ -173,36 +197,61 @@ export function AppShell({ companyName, userName, isDemo, children }: AppShellPr
       <div className={`kledo-mobile-backdrop ${mobileOpen ? "is-open" : ""}`} onClick={() => setMobileOpen(false)} />
 
       {/* Sidebar */}
-      <aside className={`kledo-sidebar print:hidden ${mobileOpen ? "is-open" : ""}`}>
+      <aside className={`kledo-sidebar print:hidden ${mobileOpen ? "is-open" : ""} ${collapsed ? "is-collapsed" : ""}`}>
         <div className="kledo-brand-row">
           <div className="kledo-logo">
-            KAS<span>KU</span>
+            {collapsed ? (
+              <>
+                K<span>K</span>
+              </>
+            ) : (
+              <>
+                KAS<span>KU</span>
+              </>
+            )}
           </div>
-          <div className="kledo-company-block">
-            <strong>{companyName}</strong>
-            <span>UMKM Cloud</span>
-          </div>
+          {!collapsed && (
+            <div className="kledo-company-block">
+              <strong>{companyName}</strong>
+              <span>UMKM Cloud</span>
+            </div>
+          )}
+          <button
+            type="button"
+            className="kledo-collapse-btn"
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
+            title={collapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
+          >
+            <PanelLeft size={16} />
+          </button>
           <button className="kledo-sidebar-close" onClick={() => setMobileOpen(false)} aria-label="Tutup menu">
             <ChevronRight size={18} />
           </button>
         </div>
 
-        <div className="kledo-search">
-          <Search size={15} />
-          <input
-            type="text"
-            value={menuQuery}
-            onChange={(e) => setMenuQuery(e.target.value)}
-            placeholder="Cari menu..."
-            aria-label="Cari menu"
-          />
-        </div>
+        {!collapsed && (
+          <div className="kledo-search">
+            <Search size={15} />
+            <input
+              type="text"
+              value={menuQuery}
+              onChange={(e) => setMenuQuery(e.target.value)}
+              placeholder="Cari menu..."
+              aria-label="Cari menu"
+            />
+          </div>
+        )}
 
         <nav className="kledo-sidebar-nav">
           {(!q || "beranda".includes(q)) && (
-            <Link href="/" className={`kledo-nav-item ${pathname === "/" ? "kledo-nav-item-active" : ""}`}>
+            <Link
+              href="/"
+              title={collapsed ? "Beranda" : undefined}
+              className={`kledo-nav-item ${pathname === "/" ? "kledo-nav-item-active" : ""}`}
+            >
               <IconBeranda />
-              <span>Beranda</span>
+              {!collapsed && <span>Beranda</span>}
             </Link>
           )}
 
@@ -210,17 +259,30 @@ export function AppShell({ companyName, userName, isDemo, children }: AppShellPr
             <>
               <button
                 type="button"
+                title={collapsed ? "Penjualan" : undefined}
                 className={`kledo-nav-item kledo-section-trigger ${pathname.startsWith("/penjualan") ? "kledo-nav-item-active" : ""}`}
-                onClick={() => setSalesOpen((value) => !value)}
+                onClick={() => {
+                  if (collapsed) {
+                    router.push("/penjualan");
+                  } else {
+                    setSalesOpen((value) => !value);
+                  }
+                }}
               >
                 <span className="kledo-nav-leading">
                   <IconPenjualan />
-                  <span>Penjualan</span>
+                  {!collapsed && <span>Penjualan</span>}
                 </span>
-                {salesOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                {collapsed ? (
+                  <ChevronDown size={11} className="kledo-collapsed-chevron" />
+                ) : salesOpen ? (
+                  <ChevronDown size={15} />
+                ) : (
+                  <ChevronRight size={15} />
+                )}
               </button>
 
-              {salesOpen && (
+              {!collapsed && salesOpen && (
                 <div className="kledo-subnav">
                   {salesItems.map(({ label, Icon }) => (
                     <Link
@@ -243,17 +305,30 @@ export function AppShell({ companyName, userName, isDemo, children }: AppShellPr
             <>
               <button
                 type="button"
+                title={collapsed ? "Pembelian" : undefined}
                 className={`kledo-nav-item kledo-section-trigger ${pathname.startsWith("/pembelian") ? "kledo-nav-item-active" : ""}`}
-                onClick={() => setPurchaseOpen((value) => !value)}
+                onClick={() => {
+                  if (collapsed) {
+                    router.push("/pembelian");
+                  } else {
+                    setPurchaseOpen((value) => !value);
+                  }
+                }}
               >
                 <span className="kledo-nav-leading">
                   <IconPembelian />
-                  <span>Pembelian</span>
+                  {!collapsed && <span>Pembelian</span>}
                 </span>
-                {purchaseOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                {collapsed ? (
+                  <ChevronDown size={11} className="kledo-collapsed-chevron" />
+                ) : purchaseOpen ? (
+                  <ChevronDown size={15} />
+                ) : (
+                  <ChevronRight size={15} />
+                )}
               </button>
 
-              {purchaseOpen && (
+              {!collapsed && purchaseOpen && (
                 <div className="kledo-subnav">
                   {purchaseItems.map(({ label, Icon }) => (
                     <Link
@@ -276,29 +351,42 @@ export function AppShell({ companyName, userName, isDemo, children }: AppShellPr
             <Link
               key={href}
               href={href}
+              title={collapsed ? label : undefined}
               className={`kledo-nav-item ${pathname.startsWith(href) ? "kledo-nav-item-active" : ""}`}
             >
               <Icon />
-              <span>{label}</span>
+              {!collapsed && <span>{label}</span>}
             </Link>
           ))}
         </nav>
 
         <div className="kledo-sidebar-bottom">
-          <Link href="/kontak" className={`kledo-nav-item ${pathname.startsWith("/kontak") ? "kledo-nav-item-active" : ""}`}>
+          <Link
+            href="/kontak"
+            title={collapsed ? "Kontak" : undefined}
+            className={`kledo-nav-item ${pathname.startsWith("/kontak") ? "kledo-nav-item-active" : ""}`}
+          >
             <IconKontak />
-            <span>Kontak</span>
+            {!collapsed && <span>Kontak</span>}
           </Link>
-          <Link href="/pengaturan" className={`kledo-nav-item ${pathname.startsWith("/pengaturan") ? "kledo-nav-item-active" : ""}`}>
+          <Link
+            href="/pengaturan"
+            title={collapsed ? "Pengaturan" : undefined}
+            className={`kledo-nav-item ${pathname.startsWith("/pengaturan") ? "kledo-nav-item-active" : ""}`}
+          >
             <IconPengaturan />
-            <span>Pengaturan</span>
+            {!collapsed && <span>Pengaturan</span>}
           </Link>
           <div className="kledo-profile">
-            <div className="kledo-avatar">{userName.slice(0, 1).toUpperCase()}</div>
-            <div>
-              <strong>{userName}</strong>
-              <span>{companyName}</span>
+            <div className="kledo-avatar" title={collapsed ? `${userName} (${companyName})` : undefined}>
+              {userName.slice(0, 1).toUpperCase()}
             </div>
+            {!collapsed && (
+              <div>
+                <strong>{userName}</strong>
+                <span>{companyName}</span>
+              </div>
+            )}
             <button onClick={handleLogout} aria-label="Keluar" title="Keluar">
               <LogOut size={16} />
             </button>
