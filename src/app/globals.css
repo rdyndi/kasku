@@ -568,51 +568,30 @@ body {
 
 @media (max-width: 780px) {
   .kledo-sidebar {
-    position: fixed;
-    left: -260px;
-    top: 0;
-    bottom: 0;
-    height: auto;
-    transition: left 0.2s ease;
-  }
-  .kledo-sidebar.is-open {
-    left: 0;
-  }
-  .kledo-sidebar-close {
-    display: inline-flex;
-  }
-  .kledo-collapse-btn {
-    display: none;
-  }
-  .kledo-sidebar.is-collapsed {
-    width: 244px;
-    flex: 0 0 244px;
-  }
-  .kledo-mobile-backdrop.is-open {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(17, 32, 59, 0.4);
-    z-index: 19;
-  }
-  .kledo-menu-button {
-    display: inline-flex;
+    display: none !important;
   }
   .kledo-topbar {
-    height: 64px;
-    padding: 0 16px;
+    display: none !important;
   }
-  .kledo-quick-actions {
-    display: none;
+  .kledo-mobile-backdrop {
+    display: none !important;
   }
   .kledo-content {
-    padding: 18px 16px 32px;
+    padding: 16px 16px 32px;
   }
   .kledo-demo-banner {
     align-items: flex-start;
     flex-direction: column;
     padding: 10px 16px;
   }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 @media print {

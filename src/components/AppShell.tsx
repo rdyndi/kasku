@@ -14,6 +14,20 @@ import {
   Trash2,
   Sun,
   PanelLeft,
+  X,
+  SlidersHorizontal,
+  Home,
+  ShoppingBag,
+  ShoppingCart,
+  Wallet,
+  Package,
+  Boxes,
+  BarChart3,
+  CreditCard,
+  BookOpen,
+  Building2,
+  Users,
+  Settings,
 } from "lucide-react";
 import {
   IconBeranda,
@@ -190,10 +204,345 @@ export function AppShell({ companyName, userName, isDemo, children }: AppShellPr
 
   return (
     <div className="kledo-app-shell">
-      <div className={`kledo-mobile-backdrop ${mobileOpen ? "is-open" : ""}`} onClick={() => setMobileOpen(false)} />
+      {/* Mobile Drawer (Matches Kledo Mobile App) */}
+      <div
+        className={`fixed inset-0 z-50 lg:hidden transition-all duration-300 ${
+          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        {/* Dark Backdrop */}
+        <div
+          className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
+          onClick={() => setMobileOpen(false)}
+        />
 
-      {/* Sidebar */}
-      <aside className={`kledo-sidebar print:hidden ${mobileOpen ? "is-open" : ""} ${collapsed ? "is-collapsed" : ""}`}>
+        {/* Blue Sidebar Drawer */}
+        <aside
+          className={`absolute inset-y-0 left-0 w-[285px] max-w-[85vw] bg-gradient-to-b from-[#1e40af] via-[#1d4ed8] to-[#1e3a8a] text-white shadow-2xl flex flex-col justify-between overflow-y-auto transform transition-transform duration-300 ease-out z-10 ${
+            mobileOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="p-5">
+            {/* Brand Row with Stylized Logo and Close Button */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-1.5 text-2xl font-black tracking-tight text-white select-none">
+                <span>kas</span>
+                <div className="flex flex-col gap-1 justify-center py-0.5">
+                  <span className="w-5 h-1 bg-white rounded-full opacity-90" />
+                  <span className="w-4 h-1 bg-white rounded-full opacity-90" />
+                  <span className="w-5 h-1 bg-white rounded-full" />
+                </div>
+                <span>ku</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                className="p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10"
+                aria-label="Tutup menu"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* User Name */}
+            <div className="text-xl font-extrabold tracking-wide text-white mb-2 uppercase">
+              {userName}
+            </div>
+
+            {/* Company Switcher Pill */}
+            <div className="relative mb-5">
+              <button
+                type="button"
+                onClick={toggleCompanyDropdown}
+                className="w-full bg-white text-blue-700 font-semibold px-4 py-2.5 rounded-full flex items-center justify-between text-xs shadow-md active:scale-98 transition"
+              >
+                <span className="truncate pr-2">{companyName}</span>
+                <ChevronDown size={15} className="text-blue-700 flex-shrink-0" />
+              </button>
+
+              {/* Company Switcher Dropdown */}
+              {companyDropdownOpen && (
+                <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl py-2 z-50 text-slate-800 text-xs">
+                  <div className="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    Ganti Perusahaan
+                  </div>
+                  {companies.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => {
+                        switchCompany(c.id);
+                        setMobileOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 flex items-center justify-between ${
+                        c.id === currentCompanyId
+                          ? "bg-blue-50 text-blue-600 font-bold"
+                          : "hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="truncate">{c.name}</span>
+                      {c.id === currentCompanyId && <span className="w-2 h-2 rounded-full bg-blue-600" />}
+                    </button>
+                  ))}
+                  <div className="border-t border-slate-100 mt-1 pt-1 px-2">
+                    <Link
+                      href="/perusahaan"
+                      onClick={() => {
+                        setCompanyDropdownOpen(false);
+                        setMobileOpen(false);
+                      }}
+                      className="block px-3 py-1.5 text-slate-600 hover:bg-slate-50 rounded-lg"
+                    >
+                      Daftar Perusahaan
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCompanyDropdownOpen(false);
+                        setShowNewCompany(true);
+                        setMobileOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-1.5 text-blue-600 font-semibold hover:bg-slate-50 rounded-lg"
+                    >
+                      + Tambah Perusahaan
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Navigation Menu */}
+            <nav className="space-y-1">
+              {/* Beranda (Yellow when active on /) */}
+              <Link
+                href="/"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3.5 px-3 py-2.5 rounded-xl font-semibold text-sm transition ${
+                  pathname === "/"
+                    ? "text-yellow-300 font-bold"
+                    : "text-white/90 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <Home size={19} className={pathname === "/" ? "text-yellow-300" : "text-white"} />
+                <span>Beranda</span>
+              </Link>
+
+              {/* Penjualan (Expandable) */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setSalesOpen((v) => !v)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition ${
+                    pathname.startsWith("/penjualan")
+                      ? "text-yellow-300 font-bold"
+                      : "text-white/90 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <div className="flex items-center gap-3.5">
+                    <ShoppingBag size={19} className={pathname.startsWith("/penjualan") ? "text-yellow-300" : "text-white"} />
+                    <span>Penjualan</span>
+                  </div>
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform duration-200 ${salesOpen ? "rotate-180 text-white" : "text-white/70"}`}
+                  />
+                </button>
+                {salesOpen && (
+                  <div className="pl-10 pr-2 py-1 space-y-1">
+                    {salesItems.map((item) => (
+                      <Link
+                        key={item.label}
+                        href="/penjualan"
+                        onClick={() => setMobileOpen(false)}
+                        className="block py-1.5 text-xs text-white/80 hover:text-white"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Pembelian (Expandable) */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setPurchaseOpen((v) => !v)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition ${
+                    pathname.startsWith("/pembelian")
+                      ? "text-yellow-300 font-bold"
+                      : "text-white/90 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <div className="flex items-center gap-3.5">
+                    <ShoppingCart size={19} className={pathname.startsWith("/pembelian") ? "text-yellow-300" : "text-white"} />
+                    <span>Pembelian</span>
+                  </div>
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform duration-200 ${purchaseOpen ? "rotate-180 text-white" : "text-white/70"}`}
+                  />
+                </button>
+                {purchaseOpen && (
+                  <div className="pl-10 pr-2 py-1 space-y-1">
+                    {purchaseItems.map((item) => (
+                      <Link
+                        key={item.label}
+                        href="/pembelian"
+                        onClick={() => setMobileOpen(false)}
+                        className="block py-1.5 text-xs text-white/80 hover:text-white"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Biaya */}
+              <Link
+                href="/biaya"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition ${
+                  pathname.startsWith("/biaya")
+                    ? "text-yellow-300 font-bold"
+                    : "text-white/90 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <Wallet size={19} className={pathname.startsWith("/biaya") ? "text-yellow-300" : "text-white"} />
+                <span>Biaya</span>
+              </Link>
+
+              {/* Produk */}
+              <Link
+                href="/produk"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition ${
+                  pathname.startsWith("/produk")
+                    ? "text-yellow-300 font-bold"
+                    : "text-white/90 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <Package size={19} className={pathname.startsWith("/produk") ? "text-yellow-300" : "text-white"} />
+                <span>Produk</span>
+              </Link>
+
+              {/* Inventori */}
+              <Link
+                href="/inventori"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition ${
+                  pathname.startsWith("/inventori")
+                    ? "text-yellow-300 font-bold"
+                    : "text-white/90 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <Boxes size={19} className={pathname.startsWith("/inventori") ? "text-yellow-300" : "text-white"} />
+                <span>Inventori</span>
+              </Link>
+
+              {/* Laporan */}
+              <Link
+                href="/laporan"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition ${
+                  pathname.startsWith("/laporan")
+                    ? "text-yellow-300 font-bold"
+                    : "text-white/90 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <BarChart3 size={19} className={pathname.startsWith("/laporan") ? "text-yellow-300" : "text-white"} />
+                <span>Laporan</span>
+              </Link>
+
+              {/* Kas & Bank */}
+              <Link
+                href="/kas-bank"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition ${
+                  pathname.startsWith("/kas-bank")
+                    ? "text-yellow-300 font-bold"
+                    : "text-white/90 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <CreditCard size={19} className={pathname.startsWith("/kas-bank") ? "text-yellow-300" : "text-white"} />
+                <span>Kas &amp; Bank</span>
+              </Link>
+
+              {/* Akun */}
+              <Link
+                href="/akun"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition ${
+                  pathname.startsWith("/akun")
+                    ? "text-yellow-300 font-bold"
+                    : "text-white/90 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <BookOpen size={19} className={pathname.startsWith("/akun") ? "text-yellow-300" : "text-white"} />
+                <span>Akun</span>
+              </Link>
+
+              {/* Aset Tetap */}
+              <Link
+                href="/akun"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition ${
+                  pathname === "/aset-tetap"
+                    ? "text-yellow-300 font-bold"
+                    : "text-white/90 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <Building2 size={19} className={pathname === "/aset-tetap" ? "text-yellow-300" : "text-white"} />
+                <span>Aset Tetap</span>
+              </Link>
+
+              {/* Kontak */}
+              <Link
+                href="/kontak"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition ${
+                  pathname.startsWith("/kontak")
+                    ? "text-yellow-300 font-bold"
+                    : "text-white/90 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <Users size={19} className={pathname.startsWith("/kontak") ? "text-yellow-300" : "text-white"} />
+                <span>Kontak</span>
+              </Link>
+
+              {/* Pengaturan */}
+              <Link
+                href="/pengaturan"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition ${
+                  pathname.startsWith("/pengaturan")
+                    ? "text-yellow-300 font-bold"
+                    : "text-white/90 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <Settings size={19} className={pathname.startsWith("/pengaturan") ? "text-yellow-300" : "text-white"} />
+                <span>Pengaturan</span>
+              </Link>
+            </nav>
+          </div>
+
+          {/* Drawer Footer with Logout */}
+          <div className="p-4 border-t border-white/10 mt-auto">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition"
+            >
+              <LogOut size={18} />
+              <span>Keluar</span>
+            </button>
+          </div>
+        </aside>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <aside className={`kledo-sidebar print:hidden hidden lg:flex ${collapsed ? "is-collapsed" : ""}`}>
         <div className="kledo-brand-row">
           <div className="kledo-logo">
             {collapsed ? (
@@ -392,7 +741,40 @@ export function AppShell({ companyName, userName, isDemo, children }: AppShellPr
 
       {/* Main Content */}
       <div className="kledo-main-column">
-        <header className="kledo-topbar print:hidden">
+        {/* Mobile Header (Royal Blue Kledo Style - Matches Screenshot 1) */}
+        <header className="lg:hidden bg-gradient-to-r from-blue-700 via-blue-700 to-blue-800 text-white px-4 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs print:hidden">
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className="p-1 -ml-1 rounded-lg text-white hover:bg-white/10 active:scale-95 transition"
+            aria-label="Buka menu"
+          >
+            <Menu size={22} />
+          </button>
+          <div className="font-bold text-white text-base tracking-tight truncate max-w-[210px] text-center">
+            {companyName}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="p-1.5 rounded-lg text-white/90 hover:bg-white/10"
+              aria-label="Filter"
+            >
+              <SlidersHorizontal size={18} />
+            </button>
+            <button
+              type="button"
+              className="p-1.5 rounded-lg text-white/90 hover:bg-white/10 relative"
+              aria-label="Notifikasi"
+            >
+              <Bell size={18} />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full" />
+            </button>
+          </div>
+        </header>
+
+        {/* Desktop Header */}
+        <header className="kledo-topbar hidden lg:flex print:hidden">
           <button className="kledo-menu-button" onClick={() => setMobileOpen(true)} aria-label="Buka menu">
             <Menu size={20} />
           </button>
@@ -494,20 +876,22 @@ export function AppShell({ companyName, userName, isDemo, children }: AppShellPr
           </div>
         )}
 
-        <main className="kledo-content">
-          <div className="kledo-breadcrumb print:hidden">
-            <Link href="/">Beranda</Link>
-            <span>·</span>
-            {pathname.startsWith("/penjualan") ? (
-              <>
-                <Link href="/penjualan">Penjualan</Link>
-                <span>·</span>
-                <strong>Tagihan</strong>
-              </>
-            ) : (
-              <strong>{getBreadcrumbLabel(pathname)}</strong>
-            )}
-          </div>
+        <main className={`kledo-content ${pathname === "/" ? "p-0! lg:p-6!" : ""}`}>
+          {pathname !== "/" && (
+            <div className="kledo-breadcrumb print:hidden">
+              <Link href="/">Beranda</Link>
+              <span>·</span>
+              {pathname.startsWith("/penjualan") ? (
+                <>
+                  <Link href="/penjualan">Penjualan</Link>
+                  <span>·</span>
+                  <strong>Tagihan</strong>
+                </>
+              ) : (
+                <strong>{getBreadcrumbLabel(pathname)}</strong>
+              )}
+            </div>
+          )}
           {children}
         </main>
       </div>

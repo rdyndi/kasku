@@ -2,7 +2,20 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Filter, MoreVertical, Printer, Search } from "lucide-react";
+import {
+  Filter,
+  MoreVertical,
+  Printer,
+  Search,
+  ShoppingBag,
+  ShoppingCart,
+  Wallet,
+  Package,
+  BarChart3,
+  CreditCard,
+  Building2,
+  Users,
+} from "lucide-react";
 import {
   AgingBarChartSVG,
   AreaChartSVG,
@@ -154,7 +167,15 @@ function FilterMenu({
   );
 }
 
-export function DashboardClient({ data }: { data: DashboardPayload }) {
+export function DashboardClient({
+  data,
+  companyName,
+  userName = "RENDY",
+}: {
+  data: DashboardPayload;
+  companyName?: string;
+  userName?: string;
+}) {
   const [search, setSearch] = useState("");
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [hiddenCards, setHiddenCards] = useState<string[]>([]);
@@ -227,8 +248,221 @@ export function DashboardClient({ data }: { data: DashboardPayload }) {
   ];
 
   return (
-    <div className="space-y-5">
-      {/* Header Toolbar */}
+    <div>
+      {/* ==================================================== */}
+      {/* MOBILE DASHBOARD VIEW (Matches Screenshot 1 EXACTLY) */}
+      {/* ==================================================== */}
+      <div className="block lg:hidden bg-slate-50 min-h-screen pb-14">
+        {/* Curved Blue Hero Greeting */}
+        <div className="bg-gradient-to-b from-blue-700 via-blue-700 to-blue-800 text-white px-5 pt-3 pb-16 rounded-b-[36px] relative overflow-hidden">
+          {/* Decorative 8-dot grid on top right */}
+          <div className="absolute right-6 top-3 grid grid-cols-4 gap-2 opacity-30 pointer-events-none">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="w-1.5 h-1.5 bg-white rounded-full" />
+            ))}
+          </div>
+
+          <div className="relative z-10 space-y-1">
+            <h1 className="text-2xl font-black tracking-tight text-white uppercase">
+              Hi {userName}!
+            </h1>
+            <p className="text-xs text-blue-100 font-medium">
+              Yuk mudahkan keuangan bisnis dengan Kasku
+            </p>
+          </div>
+        </div>
+
+        {/* Floating Quick Menu Card (8 Items) */}
+        <div className="-mt-10 mx-4 bg-white rounded-3xl p-5 shadow-xl shadow-blue-950/10 border border-slate-100/90 relative z-20">
+          <div className="grid grid-cols-4 gap-y-4 gap-x-2 text-center">
+            {/* Penjualan */}
+            <Link href="/penjualan" className="flex flex-col items-center group">
+              <div className="w-13 h-13 rounded-2xl bg-[#e6f9f0] flex items-center justify-center shadow-xs active:scale-95 transition group-hover:scale-105">
+                <ShoppingBag className="w-6 h-6 text-[#10b981]" />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-800 mt-1.5">Penjualan</span>
+            </Link>
+
+            {/* Pembelian */}
+            <Link href="/pembelian" className="flex flex-col items-center group">
+              <div className="w-13 h-13 rounded-2xl bg-[#e0f2fe] flex items-center justify-center shadow-xs active:scale-95 transition group-hover:scale-105">
+                <ShoppingCart className="w-6 h-6 text-[#0284c7]" />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-800 mt-1.5">Pembelian</span>
+            </Link>
+
+            {/* Biaya */}
+            <Link href="/biaya" className="flex flex-col items-center group">
+              <div className="w-13 h-13 rounded-2xl bg-[#ffedd5] flex items-center justify-center shadow-xs active:scale-95 transition group-hover:scale-105">
+                <Wallet className="w-6 h-6 text-[#ea580c]" />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-800 mt-1.5">Biaya</span>
+            </Link>
+
+            {/* Produk */}
+            <Link href="/produk" className="flex flex-col items-center group">
+              <div className="w-13 h-13 rounded-2xl bg-[#fef3c7] flex items-center justify-center shadow-xs active:scale-95 transition group-hover:scale-105">
+                <Package className="w-6 h-6 text-[#d97706]" />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-800 mt-1.5">Produk</span>
+            </Link>
+
+            {/* Laporan */}
+            <Link href="/laporan" className="flex flex-col items-center group">
+              <div className="w-13 h-13 rounded-2xl bg-[#f3e8ff] flex items-center justify-center shadow-xs active:scale-95 transition group-hover:scale-105">
+                <BarChart3 className="w-6 h-6 text-[#9333ea]" />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-800 mt-1.5">Laporan</span>
+            </Link>
+
+            {/* Kas & Bank */}
+            <Link href="/kas-bank" className="flex flex-col items-center group">
+              <div className="w-13 h-13 rounded-2xl bg-[#ccfbf1] flex items-center justify-center shadow-xs active:scale-95 transition group-hover:scale-105">
+                <CreditCard className="w-6 h-6 text-[#0d9488]" />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-800 mt-1.5">Kas &amp; Bank</span>
+            </Link>
+
+            {/* Aset Tetap */}
+            <Link href="/akun" className="flex flex-col items-center group">
+              <div className="w-13 h-13 rounded-2xl bg-[#e0e7ff] flex items-center justify-center shadow-xs active:scale-95 transition group-hover:scale-105">
+                <Building2 className="w-6 h-6 text-[#4f46e5]" />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-800 mt-1.5">Aset Tetap</span>
+            </Link>
+
+            {/* Kontak */}
+            <Link href="/kontak" className="flex flex-col items-center group">
+              <div className="w-13 h-13 rounded-2xl bg-[#ffe4e6] flex items-center justify-center shadow-xs active:scale-95 transition group-hover:scale-105">
+                <Users className="w-6 h-6 text-[#e11d48]" />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-800 mt-1.5">Kontak</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Section: Kas & Bank */}
+        <div className="px-4 mt-7">
+          <h2 className="text-base font-bold text-slate-900 mb-3">Kas &amp; Bank</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2 pt-0.5 no-scrollbar">
+            {data.cashWidgets.map((cw) => {
+              const initial = (cw.name || "K").trim().slice(0, 1).toUpperCase();
+              return (
+                <Link
+                  key={cw.id}
+                  href={`/kas-bank/${cw.id}`}
+                  className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3.5 flex items-center gap-3 min-w-[170px] flex-shrink-0 active:scale-98 transition"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-blue-100/70 text-blue-700 font-bold flex items-center justify-center text-sm flex-shrink-0">
+                    {initial}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide truncate">
+                      {cw.name}
+                    </div>
+                    <div className="text-sm font-bold text-slate-900 truncate">
+                      {fmt(cw.balance)}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Section: Performa Bisnis */}
+        <div className="px-4 mt-6">
+          <h2 className="text-base font-bold text-slate-900 mb-3">Performa Bisnis</h2>
+          <div className="flex gap-4 overflow-x-auto pb-4 pt-0.5 no-scrollbar">
+            {data.cashWidgets.map((cw) => (
+              <div
+                key={cw.id}
+                className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 min-w-[285px] max-w-[320px] flex-shrink-0 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <Link
+                    href={`/kas-bank/${cw.id}`}
+                    className="text-sm font-bold text-slate-800 hover:text-blue-600 uppercase tracking-wide"
+                  >
+                    {cw.name}
+                  </Link>
+                  <MoreVertical className="w-4 h-4 text-slate-400" />
+                </div>
+                <div className="text-right text-xs space-y-0.5">
+                  <div className="text-slate-600">
+                    Saldo di kasku <strong className="text-slate-900 font-bold">{fmt(cw.balance)}</strong>
+                  </div>
+                  <div className="text-slate-400">
+                    Saldo Statement <strong className="text-slate-700">0</strong>
+                  </div>
+                </div>
+                <div className="h-32 pt-1">
+                  <AreaChartSVG data={cw.series} color="#ff5a79" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Additional Mobile Widgets */}
+        <div className="px-4 mt-4 space-y-4">
+          {/* AP Aging */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              TAGIHAN YANG PERLU KAMU BAYAR
+            </h3>
+            <div className="text-right text-xs space-y-0.5">
+              <div className="text-slate-700">
+                {data.apAging.openCount} Menunggu pembayaran{" "}
+                <strong className="text-slate-900">{fmt(data.apAging.openTotal)}</strong>
+              </div>
+              <div className="text-slate-700">
+                {data.apAging.overdueCount} Jatuh tempo{" "}
+                <strong className="text-red-600">{fmt(data.apAging.overdueTotal)}</strong>
+              </div>
+            </div>
+            <AgingBarChartSVG buckets={data.apAging.buckets} color="#ff5a79" />
+          </div>
+
+          {/* Biaya Donut */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              {expenseTitle}
+            </h3>
+            <DonutChartSVG slices={expenseData.slices} />
+            <div className="border-t border-slate-100 pt-2 text-xs">
+              <div className="flex justify-between font-semibold py-1">
+                <span>Total Biaya</span>
+                <span>{fmt(expenseData.total)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Laba Rugi */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              LABA RUGI
+            </h3>
+            <div className="text-right text-xs text-slate-600">
+              Laba bersih tahun ini{" "}
+              <strong className="text-slate-900">{fmt(plData.netProfitYear)}</strong>
+            </div>
+            <GroupedBarChartSVG
+              data={plData.series}
+              bars={[
+                { key: "gross", label: "Laba kotor", color: "#42bfb9" },
+                { key: "net", label: "Laba bersih", color: "#f7c348" },
+              ]}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ==================================================== */}
+      {/* DESKTOP DASHBOARD VIEW (Unchanged Desktop Experience) */}
+      {/* ==================================================== */}
+      <div className="hidden lg:block space-y-5">
+        {/* Header Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-slate-900">Beranda</h1>
         <div className="flex items-center gap-2">
@@ -526,6 +760,7 @@ export function DashboardClient({ data }: { data: DashboardPayload }) {
             })}
           </div>
         )}
+      </div>
       </div>
     </div>
   );

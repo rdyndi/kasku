@@ -248,7 +248,11 @@ export default async function HomePage() {
 
   return (
     <AppShell companyName={company.name} userName={session.name} isDemo={company.isDemo}>
-      <DashboardClient data={payload} />
+      <DashboardClient
+        data={payload}
+        companyName={company.name}
+        userName={session.name}
+      />
     </AppShell>
   );
 }
