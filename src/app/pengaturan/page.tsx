@@ -7,19 +7,33 @@ import { SettingsClient } from "@/components/SettingsClient";
 export default async function SettingsPage() {
   const { session, company } = await requirePageSession();
 
-  const fullCompany = await prisma.company.findUniqueOrThrow({
-    where: { id: company.id },
-    include: {
-      numberSequences: true,
-      taxes: true,
-      paymentTerms: true,
-      accountMappings: { include: { account: true } },
-    },
-  });
+  const [fullCompany, currentUser] = await Promise.all([
+    prisma.company.findUniqueOrThrow({
+      where: { id: company.id },
+      include: {
+        numberSequences: true,
+        taxes: true,
+        paymentTerms: true,
+        accountMappings: { include: { account: true } },
+      },
+    }),
+    prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { name: true, email: true },
+    }),
+  ]);
 
   return (
-    <AppShell companyName={company.name} userName={session.name} isDemo={company.isDemo}>
+    <AppShell
+      companyName={company.name}
+      userName={currentUser?.name || session.name}
+      isDemo={company.isDemo}
+    >
       <SettingsClient
+        user={{
+          name: currentUser?.name || session.name,
+          email: currentUser?.email || session.email,
+        }}
         company={{
           name: fullCompany.name,
           npwp: fullCompany.npwp,
