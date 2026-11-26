@@ -444,6 +444,13 @@ export function AppShell({ companyName, userName, isDemo, children }: AppShellPr
                   </button>
                 ))}
                 <div className="border-t border-slate-100 mt-1 pt-1">
+                  <Link
+                    href="/perusahaan"
+                    onClick={() => setCompanyDropdownOpen(false)}
+                    className="block w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Daftar Perusahaan
+                  </Link>
                   <button
                     type="button"
                     onClick={() => {
