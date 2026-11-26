@@ -186,23 +186,23 @@ export function InvoiceDetailClient({
             <Printer className="w-4 h-4" />
             Print
           </button>
-          {invoice.status === "OPEN" && (
-            <>
-              <Link
-                href={`/penjualan/${invoice.id}/edit`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
-              >
-                <Pencil className="w-4 h-4" />
-                Edit
-              </Link>
-              <button
-                onClick={handleDelete}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 hover:bg-red-100"
-              >
-                <Trash2 className="w-4 h-4" />
-                Hapus
-              </button>
-            </>
+          {invoice.status !== "VOID" && (
+            <Link
+              href={`/penjualan/${invoice.id}/edit`}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
+            >
+              <Pencil className="w-4 h-4" />
+              Edit
+            </Link>
+          )}
+          {invoice.status === "OPEN" && invoice.paidAmount === 0 && (
+            <button
+              onClick={handleDelete}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 hover:bg-red-100"
+            >
+              <Trash2 className="w-4 h-4" />
+              Hapus
+            </button>
           )}
         </div>
       </div>

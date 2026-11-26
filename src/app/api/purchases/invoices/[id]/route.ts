@@ -66,13 +66,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ invoice: updated });
   }
 
-  // Full Edit
-  if (Number(existing.paidAmount) > 0) {
-    return NextResponse.json(
-      { error: "Tagihan yang sudah memiliki pembayaran tidak dapat diedit." },
-      { status: 400 }
-    );
-  }
+  // Full Edit (diizinkan untuk OPEN, PARTIAL, maupun PAID selama belum VOID)
   if (existing.status === "VOID") {
     return NextResponse.json({ error: "Tagihan yang sudah dibatalkan tidak dapat diedit." }, { status: 400 });
   }
@@ -206,6 +200,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
   }
 
+  const existingPaid = Number(existing.paidAmount) || 0;
+  const newBalanceDue = Math.max(0, grandTotal - existingPaid);
+  const newStatus = newBalanceDue <= 0 ? "PAID" : existingPaid > 0 ? "PARTIAL" : "OPEN";
+
   await prisma.purchaseInvoiceItem.deleteMany({ where: { purchaseInvoiceId: id } });
   const updated = await prisma.purchaseInvoice.update({
     where: { id },
@@ -216,7 +214,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       subtotal,
       taxTotal,
       grandTotal,
-      balanceDue: grandTotal,
+      balanceDue: newBalanceDue,
+      status: newStatus,
       items: {
         create: computedItems.map((it) => ({
           productId: it.productId || null,
