@@ -1,7 +1,7 @@
 # fly.toml app configuration file for KASKU
 # Lihat dokumentasi: https://fly.io/docs/reference/configuration/
 
-app = "kasku-umkm"
+app = "kasku"
 primary_region = "sin"
 
 [build]
