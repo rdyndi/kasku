@@ -60,7 +60,58 @@ export function ExpensesClient({
   const paidTotal = expenses.reduce((s, e) => s + e.paidAmount, 0);
 
   return (
-    <div className="space-y-6">
+    <div>
+      {/* Mobile View */}
+      <div className="block lg:hidden space-y-3 pb-20">
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs">
+            <div className="text-[11px] font-semibold text-slate-400 uppercase">Utang Biaya</div>
+            <div className="mt-1 text-sm font-bold text-rose-600">{money(openTotal)}</div>
+          </div>
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs">
+            <div className="text-[11px] font-semibold text-slate-400 uppercase">Total Dibayar</div>
+            <div className="mt-1 text-sm font-bold text-emerald-600">{money(paidTotal)}</div>
+          </div>
+        </div>
+
+        <div className="space-y-2.5">
+          {expenses.map((exp) => (
+            <Link
+              key={exp.id}
+              href={`/biaya/${exp.id}`}
+              className="block bg-white rounded-2xl border border-slate-100 p-4 shadow-xs active:scale-[0.99] transition"
+            >
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <span className="font-bold text-blue-600 text-sm">{exp.expenseNo}</span>
+                <StatusBadge status={exp.status} />
+              </div>
+              <div className="text-sm font-semibold text-slate-800 truncate">
+                {exp.contact?.name || "Pengeluaran Umum"}
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-500 pt-2.5 mt-2.5 border-t border-slate-100">
+                <span>{new Date(exp.transDate).toLocaleDateString("id-ID")}</span>
+                <span className="text-sm font-bold text-slate-900">{money(exp.grandTotal)}</span>
+              </div>
+            </Link>
+          ))}
+          {expenses.length === 0 && (
+            <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center text-sm text-slate-400">
+              Belum ada catatan biaya.
+            </div>
+          )}
+        </div>
+
+        <Link
+          href="/biaya/buat"
+          aria-label="Catat Biaya Baru"
+          className="fixed bottom-6 right-5 w-14 h-14 rounded-full bg-blue-600 text-white shadow-xl shadow-blue-600/30 flex items-center justify-center z-30 active:scale-95 transition"
+        >
+          <Plus className="w-6 h-6" />
+        </Link>
+      </div>
+
+      {/* Desktop View */}
+      <div className="hidden lg:block space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Biaya / Pengeluaran</h1>
@@ -204,6 +255,7 @@ export function ExpensesClient({
             balanceDue: Math.max(0, exp.grandTotal - exp.paidAmount),
           }))}
       />
+      </div>
     </div>
   );
 }

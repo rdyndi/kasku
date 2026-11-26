@@ -91,7 +91,149 @@ export function PurchasesClient({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-5 shadow-xs">
+    <div>
+      {/* Mobile View */}
+      <div className="block lg:hidden space-y-3 pb-20">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Cari nomor / supplier..."
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+          />
+        </div>
+
+        {/* Horizontal Status Pills */}
+        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {STATUS_TABS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => {
+                setStatusTab(t.key);
+                setPage(1);
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${
+                statusTab === t.key
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "bg-white text-slate-600 border border-slate-200"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Summary Strip */}
+        <div className="flex items-center justify-between text-xs text-slate-500 px-1">
+          <span>{filtered.length} tagihan</span>
+          <span>
+            Total: <strong className="text-slate-900">Rp {fmtNum(allGrandSum)}</strong>
+          </span>
+        </div>
+
+        {/* Mobile Purchase Bill Cards */}
+        <div className="space-y-2.5">
+          {paged.map((inv) => {
+            const badgeCls =
+              inv.status === "PAID"
+                ? "bg-emerald-50 text-emerald-700"
+                : inv.status === "PARTIAL"
+                ? "bg-amber-50 text-amber-700"
+                : inv.status === "OPEN"
+                ? "bg-rose-50 text-rose-700"
+                : "bg-slate-100 text-slate-500";
+            const badgeLabel =
+              inv.status === "PAID"
+                ? "Lunas"
+                : inv.status === "PARTIAL"
+                ? "Dibayar Sebagian"
+                : inv.status === "OPEN"
+                ? "Belum Dibayar"
+                : inv.status === "VOID"
+                ? "Void"
+                : inv.status;
+            return (
+              <Link
+                key={inv.id}
+                href={`/pembelian/${inv.id}`}
+                className="block bg-white rounded-2xl border border-slate-100 p-4 shadow-xs active:scale-[0.99] transition"
+              >
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="font-bold text-blue-600 text-sm">{inv.billNo}</span>
+                  <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${badgeCls}`}>
+                    {badgeLabel}
+                  </span>
+                </div>
+                <div className="text-sm font-semibold text-slate-800 truncate">
+                  {inv.contact?.name || "Supplier"}
+                </div>
+                <div className="flex items-end justify-between text-xs text-slate-500 pt-2.5 mt-2.5 border-t border-slate-100">
+                  <div>
+                    <div>Tgl: {new Date(inv.transDate).toLocaleDateString("id-ID")}</div>
+                    <div className="text-[11px] text-slate-400">
+                      Jatuh tempo: {new Date(inv.dueDate).toLocaleDateString("id-ID")}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {inv.balanceDue > 0 && inv.balanceDue !== inv.grandTotal && (
+                      <div className="text-[11px] text-rose-600 font-medium">
+                        Sisa: Rp {fmtNum(inv.balanceDue)}
+                      </div>
+                    )}
+                    <div className="text-sm font-bold text-slate-900">
+                      Rp {fmtNum(inv.grandTotal)}
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+          {paged.length === 0 && (
+            <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center text-sm text-slate-400">
+              Tidak ada tagihan pembelian.
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-2">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPage(p)}
+                className={`w-8 h-8 rounded-full text-xs font-semibold ${
+                  p === safePage
+                    ? "bg-blue-600 text-white"
+                    : "bg-white border border-slate-200 text-slate-600"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Mobile FAB */}
+        <Link
+          href="/pembelian/buat"
+          aria-label="Buat Pembelian Baru"
+          className="fixed bottom-6 right-5 w-14 h-14 rounded-full bg-blue-600 text-white shadow-xl shadow-blue-600/30 flex items-center justify-center z-30 active:scale-95 transition"
+        >
+          <Plus className="w-6 h-6" />
+        </Link>
+      </div>
+
+      {/* Desktop View */}
+      <div className="hidden lg:block bg-white rounded-xl border border-slate-200 p-6 space-y-5 shadow-xs">
       {/* Header Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-slate-900">Tagihan Pembelian</h1>
@@ -387,6 +529,7 @@ export function PurchasesClient({
             balanceDue: inv.balanceDue,
           }))}
       />
+      </div>
     </div>
   );
 }

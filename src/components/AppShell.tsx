@@ -752,7 +752,7 @@ export function AppShell({ companyName, userName, isDemo, children }: AppShellPr
             <Menu size={22} />
           </button>
           <div className="font-bold text-white text-base tracking-tight truncate max-w-[210px] text-center">
-            {companyName}
+            {pathname === "/" ? companyName : getBreadcrumbLabel(pathname)}
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -878,7 +878,7 @@ export function AppShell({ companyName, userName, isDemo, children }: AppShellPr
 
         <main className={`kledo-content ${pathname === "/" ? "p-0! lg:p-6!" : ""}`}>
           {pathname !== "/" && (
-            <div className="kledo-breadcrumb print:hidden">
+            <div className="kledo-breadcrumb hidden lg:flex print:hidden">
               <Link href="/">Beranda</Link>
               <span>·</span>
               {pathname.startsWith("/penjualan") ? (
