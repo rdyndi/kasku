@@ -3,7 +3,6 @@ import { InventoryClient } from "@/components/InventoryClient";
 import { requirePageSession } from "@/lib/require-page-session";
 import { prisma } from "@/lib/prisma";
 
-export const instant = false;
 
 export default async function InventoryPage() {
   const { session, company } = await requirePageSession();

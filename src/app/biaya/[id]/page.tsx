@@ -5,7 +5,6 @@ import { requirePageSession } from "@/lib/require-page-session";
 import { getTrialBalance } from "@/lib/accounting";
 import { prisma } from "@/lib/prisma";
 
-export const instant = false;
 
 export default async function ExpenseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { session, company } = await requirePageSession();

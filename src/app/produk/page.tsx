@@ -3,7 +3,6 @@ import { ProductsClient } from "@/components/ProductsClient";
 import { requirePageSession } from "@/lib/require-page-session";
 import { prisma } from "@/lib/prisma";
 
-export const instant = false;
 
 export default async function ProductsPage() {
   const { session, company } = await requirePageSession();

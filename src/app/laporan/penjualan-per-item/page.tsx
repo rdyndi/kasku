@@ -2,7 +2,6 @@ import { requirePageSession } from "@/lib/require-page-session";
 import { AppShell } from "@/components/AppShell";
 import { PenjualanPerItemClient } from "@/components/PenjualanPerItemClient";
 
-export const instant = false;
 
 export default async function PenjualanPerItemPage() {
   const { session, company } = await requirePageSession();

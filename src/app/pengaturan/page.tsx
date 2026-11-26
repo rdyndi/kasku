@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { AppShell } from "@/components/AppShell";
 import { SettingsClient } from "@/components/SettingsClient";
 
-export const instant = false;
 
 export default async function SettingsPage() {
   const { session, company } = await requirePageSession();

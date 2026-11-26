@@ -3,7 +3,6 @@ import { getTrialBalance } from "@/lib/accounting";
 import { AppShell } from "@/components/AppShell";
 import { AccountsClient } from "@/components/AccountsClient";
 
-export const instant = false;
 
 export default async function AccountsPage() {
   const { session, company } = await requirePageSession();

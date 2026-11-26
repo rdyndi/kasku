@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { AppShell } from "@/components/AppShell";
 import { ReportsClient } from "@/components/ReportsClient";
 
-export const instant = false;
 
 export default async function ReportsPage() {
   const { session, company } = await requirePageSession();

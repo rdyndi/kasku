@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { AppShell } from "@/components/AppShell";
 import { ContactsClient } from "@/components/ContactsClient";
 
-export const instant = false;
 
 export default async function ContactsPage() {
   const { session, company } = await requirePageSession();

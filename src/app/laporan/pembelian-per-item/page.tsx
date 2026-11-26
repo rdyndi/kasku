@@ -2,7 +2,6 @@ import { requirePageSession } from "@/lib/require-page-session";
 import { AppShell } from "@/components/AppShell";
 import { PembelianPerItemClient } from "@/components/PembelianPerItemClient";
 
-export const instant = false;
 
 export default async function PembelianPerItemPage() {
   const { session, company } = await requirePageSession();

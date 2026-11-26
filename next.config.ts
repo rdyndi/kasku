@@ -2,8 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  cacheComponents: true,
-  partialPrefetching: true,
   serverExternalPackages: ["better-sqlite3", "@prisma/adapter-better-sqlite3"],
   turbopack: {
     rules: {

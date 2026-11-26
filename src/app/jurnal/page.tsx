@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { AppShell } from "@/components/AppShell";
 import { JournalsClient } from "@/components/JournalsClient";
 
-export const instant = false;
 
 export default async function JournalsPage() {
   const { session, company } = await requirePageSession();
