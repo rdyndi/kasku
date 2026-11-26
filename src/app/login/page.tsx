@@ -11,7 +11,6 @@ import {
   Lock,
   Mail,
   ShieldCheck,
-  Sparkles,
   TrendingUp,
   User,
 } from "lucide-react";
@@ -75,23 +74,20 @@ export default function LoginPage() {
         />
 
         {/* Top Logo */}
-        <div className="relative z-10 flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center font-bold text-white text-xl shadow-lg shadow-emerald-500/25">
-            K
-          </div>
+        <div className="relative z-10 flex items-center gap-3">
+          <img
+            src="/icon-192x192.png"
+            alt="Logo KASKU"
+            className="w-10 h-10 rounded-xl object-contain shadow-md"
+          />
           <div>
-            <div className="text-lg font-bold tracking-tight">KASKU</div>
+            <div className="text-lg font-bold tracking-tight text-white">KASKU</div>
             <div className="text-xs text-slate-400">Cloud Accounting Platform</div>
           </div>
         </div>
 
         {/* Center Hero Content */}
         <div className="relative z-10 max-w-xl space-y-8 my-auto py-12">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-emerald-300 backdrop-blur-sm">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Akuntansi Modern untuk Bisnis Berkembang</span>
-          </div>
-
           <div className="space-y-4">
             <h1 className="text-4xl xl:text-5xl font-bold tracking-tight leading-[1.15] text-white">
               Kelola keuangan bisnis lebih{" "}
@@ -158,9 +154,11 @@ export default function LoginPage() {
         <div className="w-full max-w-[420px] bg-white lg:rounded-3xl lg:shadow-xl lg:shadow-slate-200/60 lg:border lg:border-slate-200/80 p-2 sm:p-8 lg:p-9">
           {/* Mobile Logo */}
           <div className="flex lg:hidden items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-bold text-white text-lg shadow-md shadow-emerald-500/20">
-              K
-            </div>
+            <img
+              src="/icon-192x192.png"
+              alt="Logo KASKU"
+              className="w-10 h-10 rounded-xl object-contain shadow-md"
+            />
             <div>
               <div className="text-lg font-bold text-slate-900">KASKU</div>
               <div className="text-xs text-slate-500">Cloud Accounting Platform</div>
