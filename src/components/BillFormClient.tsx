@@ -43,6 +43,7 @@ interface LineItem {
   unit: string;
   unitCost: string;
   taxRate: string;
+  lineTotalOverride?: string;
 }
 
 const money = (v: number) =>
@@ -97,7 +98,7 @@ export function BillFormClient({
 
   const [items, setItems] = useState<LineItem[]>(
     initialItems && initialItems.length > 0
-      ? initialItems
+      ? initialItems.map((it) => ({ ...it, lineTotalOverride: undefined }))
       : [{ productId: "", description: "", qty: "1", unit: "pcs", unitCost: "0", taxRate: "0" }]
   );
 
@@ -116,15 +117,38 @@ export function BillFormClient({
         next[idx].description = p.name;
         next[idx].unit = p.unit || "pcs";
         next[idx].unitCost = String(p.buyPrice);
+        next[idx].lineTotalOverride = undefined;
+      }
+    }
+    // Ketika qty, unitCost, atau pajak berubah → reset override
+    if (field === "qty" || field === "unitCost" || field === "taxRate") {
+      next[idx].lineTotalOverride = undefined;
+    }
+    // Ketika lineTotalOverride diketik → hitung mundur unitCost
+    if (field === "lineTotalOverride") {
+      const totalRaw = Number(val) || 0;
+      const qty = Number(next[idx].qty) || 1;
+      const taxRate = Number(next[idx].taxRate) || 0;
+      if (totalRaw > 0) {
+        const net = totalRaw / (1 + taxRate / 100);
+        const unitCost = net / qty;
+        next[idx].unitCost = String(Math.round(unitCost));
+      } else {
+        next[idx].unitCost = "0";
       }
     }
     setItems(next);
   }
 
   const lineComputations = items.map((it) => {
-    const net = (Number(it.qty) || 0) * (Number(it.unitCost) || 0);
+    const qty = Number(it.qty) || 0;
+    const cost = Number(it.unitCost) || 0;
+    const net = qty * cost;
     const tax = net * ((Number(it.taxRate) || 0) / 100);
-    return { net, tax, total: net + tax };
+    const computedTotal = net + tax;
+    const total =
+      it.lineTotalOverride !== undefined ? Number(it.lineTotalOverride) || 0 : computedTotal;
+    return { net, tax, total, computedTotal };
   });
 
   const subtotal = lineComputations.reduce((s, c) => s + c.net, 0);
@@ -347,7 +371,15 @@ export function BillFormClient({
                     </select>
                   </td>
                   <td className="p-2 text-right font-medium text-slate-900 text-xs">
-                    {money(lineComputations[idx].total)}
+                    <CurrencyInput
+                      value={
+                        it.lineTotalOverride !== undefined
+                          ? it.lineTotalOverride
+                          : String(Math.round(lineComputations[idx].total))
+                      }
+                      onValueChange={(v) => updateItem(idx, "lineTotalOverride", v)}
+                      className="w-full px-2 py-1.5 border border-blue-300 rounded-lg text-xs text-right bg-blue-50 font-semibold"
+                    />
                   </td>
                   <td className="p-2 text-center">
                     {items.length > 1 && (
@@ -371,7 +403,7 @@ export function BillFormClient({
           onClick={() =>
             setItems([
               ...items,
-              { productId: "", description: "", qty: "1", unit: "pcs", unitCost: "0", taxRate: "0" },
+              { productId: "", description: "", qty: "1", unit: "pcs", unitCost: "0", taxRate: "0", lineTotalOverride: "" },
             ])
           }
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-50"

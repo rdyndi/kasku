@@ -46,6 +46,7 @@ interface LineItem {
   discountPct: string;
   unitPrice: string;
   taxRate: string;
+  lineTotalOverride?: string; // jumlah baris yang bisa diketik manual
 }
 
 const money = (v: number) =>
@@ -105,7 +106,7 @@ export function InvoiceFormClient({
 
   const [items, setItems] = useState<LineItem[]>(
     initialItems && initialItems.length > 0
-      ? initialItems
+      ? initialItems.map((it) => ({ ...it, lineTotalOverride: undefined }))
       : [{ productId: "", description: "", qty: "1", unit: "pcs", discountPct: "0", unitPrice: "0", taxRate: "0" }]
   );
 
@@ -136,6 +137,7 @@ export function InvoiceFormClient({
           discountPct: "0",
           unitPrice: String(prod.sellPrice),
           taxRate: "0",
+          lineTotalOverride: "",
         },
       ]);
       setBarcodeInput("");
@@ -151,6 +153,37 @@ export function InvoiceFormClient({
         next[idx].description = p.name;
         next[idx].unit = p.unit || "pcs";
         next[idx].unitPrice = String(p.sellPrice);
+        next[idx].lineTotalOverride = undefined;
+      }
+    }
+    // Ketika qty, unitPrice, diskon, atau pajak diubah → reset override agar Jumlah mengikuti perhitungan
+    if (
+      field === "qty" ||
+      field === "unitPrice" ||
+      field === "discountPct" ||
+      field === "discountType" ||
+      field === "taxRate"
+    ) {
+      next[idx].lineTotalOverride = undefined;
+    }
+    // Ketika lineTotalOverride diketik → hitung mundur unitPrice
+    if (field === "lineTotalOverride") {
+      const totalRaw = Number(val) || 0;
+      const qty = Number(next[idx].qty) || 1;
+      const disc = Number(next[idx].discountPct) || 0;
+      const isRp = next[idx].discountType === "rp";
+      const taxRate = Number(next[idx].taxRate) || 0;
+      if (totalRaw > 0) {
+        const net = totalRaw / (1 + taxRate / 100);
+        let unitPrice: number;
+        if (isRp) {
+          unitPrice = (net + disc) / qty;
+        } else {
+          unitPrice = net / qty / (1 - disc / 100 || 1);
+        }
+        next[idx].unitPrice = String(Math.round(unitPrice));
+      } else {
+        next[idx].unitPrice = "0";
       }
     }
     setItems(next);
@@ -164,7 +197,11 @@ export function InvoiceFormClient({
     const net = isRp ? Math.max(0, qty * price - disc) : qty * price * (1 - disc / 100);
     const effectivePrice = qty > 0 ? net / qty : price;
     const tax = net * ((Number(it.taxRate) || 0) / 100);
-    return { effectivePrice, net, tax, total: net + tax };
+    const computedTotal = net + tax;
+    // Jika user sudah override total manual, gunakan itu untuk tampilan
+    const total =
+      it.lineTotalOverride !== undefined ? Number(it.lineTotalOverride) || 0 : computedTotal;
+    return { effectivePrice, net, tax, total, computedTotal };
   });
 
   const subtotal = lineComputations.reduce((s, c) => s + c.net, 0);
@@ -433,7 +470,15 @@ export function InvoiceFormClient({
                     </select>
                   </td>
                   <td className="p-2 text-right font-medium text-slate-900 text-xs">
-                    {money(lineComputations[idx].total)}
+                    <CurrencyInput
+                      value={
+                        it.lineTotalOverride !== undefined
+                          ? it.lineTotalOverride
+                          : String(Math.round(lineComputations[idx].total))
+                      }
+                      onValueChange={(v) => updateItem(idx, "lineTotalOverride", v)}
+                      className="w-full px-2 py-1.5 border border-blue-300 rounded-lg text-xs text-right bg-blue-50 font-semibold"
+                    />
                   </td>
                   <td className="p-2 text-center">
                     {items.length > 1 && (
@@ -457,7 +502,7 @@ export function InvoiceFormClient({
           onClick={() =>
             setItems([
               ...items,
-              { productId: "", description: "", qty: "1", unit: "pcs", discountPct: "0", unitPrice: "0", taxRate: "0" },
+            { productId: "", description: "", qty: "1", unit: "pcs", discountPct: "0", unitPrice: "0", taxRate: "0", lineTotalOverride: "" },
             ])
           }
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-50"
